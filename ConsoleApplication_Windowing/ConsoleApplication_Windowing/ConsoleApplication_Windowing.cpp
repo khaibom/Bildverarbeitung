@@ -17,6 +17,18 @@ float grauwertspreizung(int g, float wmax=255.0, float wmin=0.0) {
     return scaled;
 }
 
+// Aufgabe 26:
+static void onLowerThresholdTrackbar(int pos, void*)
+{
+    g_lowerThreshold = pos;
+    std::cout << "ne lower threshold : " << g_lowerThreshold << std::endl;
+}
+static void onUpperThresholdTrackbar(int pos, void*)
+{
+    g_upperThreshold = pos;
+    std::cout << "new upper threshold : " << g_upperThreshold << std::endl;
+}
+
 int main()
 {
     // Aufgabe 15: 
@@ -94,8 +106,15 @@ int main()
 
     // Aufgabe 23:
     cv::namedWindow("Output image", cv::WINDOW_AUTOSIZE);
-    cv::createTrackbar("Lower threshold", "Output image", &g_lowerThreshold, upperLimit);
-    cv::createTrackbar("Upper threshold", "Output image", &g_upperThreshold, upperLimit);
+    //cv::createTrackbar("Lower threshold", "Output image", &g_lowerThreshold, upperLimit);
+    //cv::createTrackbar("Upper threshold", "Output image", &g_upperThreshold, upperLimit);
+
+    // Aufgabe 27:
+    cv::createTrackbar("Lower threshold", "Output image", nullptr, upperLimit, onLowerThresholdTrackbar);
+    cv::createTrackbar("Upper threshold", "Output image", nullptr, upperLimit, onUpperThresholdTrackbar);
+    // Aufgabe 28:
+    cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
+    cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
 
     // Aufgabe 24: Interaktive Schleife
     while (true)
@@ -113,6 +132,15 @@ int main()
         if (cv::waitKey(10) == 27)
             break;
     }
+
+    // Aufgabe 27:
+    cv::createTrackbar("Lower threshold", "Output image", nullptr, upperLimit, onLowerThresholdTrackbar);
+    cv::createTrackbar("Upper threshold", "Output image", nullptr, upperLimit, onUpperThresholdTrackbar);
+    // Aufgabe 28:
+    cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
+    cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
+
+
 
 
 }
