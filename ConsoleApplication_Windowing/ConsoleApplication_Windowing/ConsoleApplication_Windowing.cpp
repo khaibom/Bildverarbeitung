@@ -8,6 +8,9 @@
 
 int main()
 {
+    // Aufgabe 15: 
+    cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
+
     cv::Mat image(500, 500, CV_8UC1);
     image = 255;
 
@@ -24,8 +27,9 @@ int main()
     cv::normalize(m51, normalisiert, 0, 255, cv::NORM_MINMAX);
     normalisiert.convertTo(normalisiert, CV_8U);
 
-    cv::imshow("normalized image", normalisiert);
-    cv::imshow("original image", m51);
+    //cv::imshow("normalized image", normalisiert);
+    //cv::imshow("original image", m51);
+    
     /*
     * Aufgabe 11:
     * CV Depth	Code returned by .depth()
@@ -43,6 +47,11 @@ int main()
     // Aufgabe 12:
     unsigned int upperLimit = std::numeric_limits<uint8_t>::max(); //2^8-1 = 255
     std::cout << "Upper limit: " << upperLimit << std::endl; // 255
+
+    // Aufgabe 14:
+    cv::imshow("Input image", normalisiert);
+
+
 
     cv::waitKey(0);                   
     
