@@ -59,7 +59,7 @@ int main()
     std::cout << "Upper limit: " << upperLimit << std::endl; // 65535
 
     // Aufgabe 14:
-    cv::imshow("Input image", normalisiert);
+    //cv::imshow("Input image", normalisiert);
 
     // Aufgabe 18:
     g_upperThreshold = upperLimit / 16;
@@ -92,6 +92,27 @@ int main()
     * b. Output: Sterne oberhalb Threshold leuchen deutlicher. Der Hintergrund wurde ünterdrück.
     */ 
 
-    cv::waitKey(0);                   
-    
+    // Aufgabe 23:
+    cv::namedWindow("Output image", cv::WINDOW_AUTOSIZE);
+    cv::createTrackbar("Lower threshold", "Output image", &g_lowerThreshold, upperLimit);
+    cv::createTrackbar("Upper threshold", "Output image", &g_upperThreshold, upperLimit);
+
+    // Aufgabe 24: Interaktive Schleife
+    while (true)
+    {
+        cv::Mat output_aufgabe24(m51.size(), CV_8U);
+        for (int y = 0; y < m51.rows; y++)
+        {
+            for (int x = 0; x < m51.cols; x++)
+            {
+                output_aufgabe24.at<uint8_t>(y, x) = static_cast<uint8_t>(grauwertspreizung(m51.at<uint16_t>(y, x)));
+            }
+        }
+        cv::imshow("Aufgabe 24", output_aufgabe24);
+
+        if (cv::waitKey(10) == 27)
+            break;
+    }
+
+
 }
