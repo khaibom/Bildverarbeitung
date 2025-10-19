@@ -6,6 +6,10 @@
 #include <limits>
 #include <cstdint>
 
+
+// Aufgabe 12:
+unsigned int upperLimit = std::numeric_limits<uint16_t>::max(); //2^16-1 = 65535
+
 // Aufgabe 17:
 int g_lowerThreshold = 0;
 int g_upperThreshold;
@@ -20,13 +24,27 @@ float grauwertspreizung(int g, float wmax=255.0, float wmin=0.0) {
 // Aufgabe 26:
 static void onLowerThresholdTrackbar(int pos, void*)
 {
-    g_lowerThreshold = pos;
-    std::cout << "ne lower threshold : " << g_lowerThreshold << std::endl;
+    if (pos < g_upperThreshold) {
+        g_lowerThreshold = pos;
+        std::cout << "new lower threshold : " << g_lowerThreshold << std::endl;
+    }
+    else {
+        g_lowerThreshold = g_upperThreshold - 1;
+        if (g_lowerThreshold < 0) g_lowerThreshold = 0;
+        std::cout << "new lower threshold : " << g_lowerThreshold << std::endl << "new upper threshold : " << g_upperThreshold << std::endl;
+    }
 }
 static void onUpperThresholdTrackbar(int pos, void*)
 {
-    g_upperThreshold = pos;
-    std::cout << "new upper threshold : " << g_upperThreshold << std::endl;
+    if (pos > g_lowerThreshold) {
+        g_upperThreshold = pos;
+        std::cout << "new upper threshold : " << g_upperThreshold << std::endl;
+    }
+    else {
+        g_upperThreshold = g_lowerThreshold + 1;
+        if (g_upperThreshold > upperLimit) g_upperThreshold = upperLimit;
+        std::cout << "new lower threshold : " << g_lowerThreshold << std::endl << "new upper threshold : " << g_upperThreshold << std::endl;
+    }
 }
 
 int main()
@@ -67,7 +85,7 @@ int main()
     std::cout << normalisiert.depth() << std::endl; //2 -> CV_16U
 
     // Aufgabe 12:
-    unsigned int upperLimit = std::numeric_limits<uint16_t>::max(); //2^16-1 = 65535
+    // unsigned int upperLimit = std::numeric_limits<uint16_t>::max(); //2^16-1 = 65535
     std::cout << "Upper limit: " << upperLimit << std::endl; // 65535
 
     // Aufgabe 14:
@@ -106,15 +124,15 @@ int main()
 
     // Aufgabe 23:
     cv::namedWindow("Output image", cv::WINDOW_AUTOSIZE);
-    //cv::createTrackbar("Lower threshold", "Output image", &g_lowerThreshold, upperLimit);
-    //cv::createTrackbar("Upper threshold", "Output image", &g_upperThreshold, upperLimit);
+    cv::createTrackbar("Lower threshold", "Output image", &g_lowerThreshold, upperLimit);
+    cv::createTrackbar("Upper threshold", "Output image", &g_upperThreshold, upperLimit);
 
     // Aufgabe 27:
-    cv::createTrackbar("Lower threshold", "Output image", nullptr, upperLimit, onLowerThresholdTrackbar);
-    cv::createTrackbar("Upper threshold", "Output image", nullptr, upperLimit, onUpperThresholdTrackbar);
-    // Aufgabe 28:
-    cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
-    cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
+    //cv::createTrackbar("Lower threshold", "Output image", nullptr, upperLimit, onLowerThresholdTrackbar);
+    //cv::createTrackbar("Upper threshold", "Output image", nullptr, upperLimit, onUpperThresholdTrackbar);
+    //// Aufgabe 28:
+    //cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
+    //cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
 
     // Aufgabe 24: Interaktive Schleife
     while (true)
@@ -133,14 +151,6 @@ int main()
             break;
     }
 
-    // Aufgabe 27:
-    cv::createTrackbar("Lower threshold", "Output image", nullptr, upperLimit, onLowerThresholdTrackbar);
-    cv::createTrackbar("Upper threshold", "Output image", nullptr, upperLimit, onUpperThresholdTrackbar);
-    // Aufgabe 28:
-    cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
-    cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
-
-
-
+    
 
 }
