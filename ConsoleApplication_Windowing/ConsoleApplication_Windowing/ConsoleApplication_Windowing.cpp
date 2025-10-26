@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <limits>
 #include <cstdint>
+#include <filesystem>
 
 
 // Aufgabe 12:
@@ -54,8 +55,12 @@ int main()
 {
     // Aufgabe 15: 
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
+    std::string inputPath = "D:\\FH Aachen\\Sem 5\\Bildverarbeitung\\Praktikum\\ConsoleApplication_Windowing\\m51.tif";
+    cv::Mat m51 = cv::imread(inputPath, cv::IMREAD_UNCHANGED);
 
-    cv::Mat m51 = cv::imread("D:\\FH Aachen\\Sem 5\\Bildverarbeitung\\Praktikum\\ConsoleApplication_Windowing\\m51.tif", cv::IMREAD_UNCHANGED);
+    std::filesystem::path p(inputPath);
+    std::string baseName = p.stem().string();
+    std::cout << baseName;
     /*
     * Aufgabe 10: 
     * a. 320x510
@@ -139,6 +144,8 @@ int main()
 
     // Aufgabe 34: 
     bool farbmodus = false;
+    cv::Mat write_output_grau(m51.size(), CV_8U);
+    cv::Mat write_output_farb(m51.size(), CV_8UC3);
     // Aufgabe 24: Interaktive Schleife
     while (true)
     {
@@ -151,6 +158,7 @@ int main()
                     output_aufgabe24.at<uint8_t>(y, x) = static_cast<uint8_t>(grauwertspreizung(m51.at<uint16_t>(y, x)));
                 }
             }
+            write_output_grau = output_aufgabe24;
             cv::imshow("Aufgabe 24/33", output_aufgabe24);
         }
         else { // Aufgabe 33: BGR
@@ -172,6 +180,7 @@ int main()
                     }
                 }
             }
+            write_output_farb = output_color;
             cv::imshow("Aufgabe 24/33", output_color);
         }
 
@@ -182,6 +191,13 @@ int main()
             farbmodus = !farbmodus; // Wechsel zwischen 0 und 1
             std::cout << "Mode switched to " << (farbmodus ? "Farbmodus" : "Grauwert") << std::endl;
         }
+        else if (key == 's' || key == 'S') {
+            std::string modus = farbmodus ? "farbe" : "grau";
+            std::string filename = baseName + "_" + modus + "_lowerTH" + std::to_string(g_lowerThreshold) + "_upperTH" + std::to_string(g_upperThreshold) + ".png";
+            cv::imwrite(filename, farbmodus ? write_output_farb : write_output_grau);
+            std::cout << "Bild gespeichert: " << filename << std::endl;
+        }
+
     }
     
     
