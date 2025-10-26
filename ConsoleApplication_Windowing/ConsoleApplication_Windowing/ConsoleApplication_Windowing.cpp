@@ -8,7 +8,7 @@
 
 
 // Aufgabe 12:
-unsigned int upperLimit = std::numeric_limits<uint16_t>::max(); //2^16-1 = 65535
+int upperLimit = std::numeric_limits<uint16_t>::max(); //2^16-1 = 65535
 
 // Aufgabe 17:
 int g_lowerThreshold = 0;
@@ -17,7 +17,10 @@ int g_upperThreshold;
 // Aufgabe 19:
 // lineare Interpolation
 float grauwertspreizung(int g, float wmax=255.0, float wmin=0.0) {
-    float scaled = (wmax - wmin)*((g-g_lowerThreshold)/(g_upperThreshold-g_lowerThreshold)) + wmin;
+    //if (g_upperThreshold == g_lowerThreshold) {
+    //    return wmin;
+    //}
+    float scaled = (wmax - wmin)*((float)(g-g_lowerThreshold)/(g_upperThreshold-g_lowerThreshold)) + wmin;
     return scaled;
 }
 
@@ -31,7 +34,7 @@ static void onLowerThresholdTrackbar(int pos, void*)
     else {
         g_lowerThreshold = g_upperThreshold - 1;
         if (g_lowerThreshold < 0) g_lowerThreshold = 0;
-        std::cout << "new lower threshold : " << g_lowerThreshold << std::endl << "new upper threshold : " << g_upperThreshold << std::endl;
+        std::cout << "new lower threshold : " << g_lowerThreshold << " new upper threshold : " << g_upperThreshold << std::endl;
     }
 }
 static void onUpperThresholdTrackbar(int pos, void*)
@@ -43,7 +46,7 @@ static void onUpperThresholdTrackbar(int pos, void*)
     else {
         g_upperThreshold = g_lowerThreshold + 1;
         if (g_upperThreshold > upperLimit) g_upperThreshold = upperLimit;
-        std::cout << "new lower threshold : " << g_lowerThreshold << std::endl << "new upper threshold : " << g_upperThreshold << std::endl;
+        std::cout << "new lower threshold : " << g_lowerThreshold << " new upper threshold : " << g_upperThreshold << std::endl;
     }
 }
 
@@ -134,23 +137,53 @@ int main()
     cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
     cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
 
+    // Aufgabe 34: 
+    bool farbmodus = false;
     // Aufgabe 24: Interaktive Schleife
     while (true)
     {
-        cv::Mat output_aufgabe24(m51.size(), CV_8U);
-        for (int y = 0; y < m51.rows; y++)
-        {
-            for (int x = 0; x < m51.cols; x++)
+        if (!farbmodus) {
+            cv::Mat output_aufgabe24(m51.size(), CV_8U);
+            for (int y = 0; y < m51.rows; y++)
             {
-                output_aufgabe24.at<uint8_t>(y, x) = static_cast<uint8_t>(grauwertspreizung(m51.at<uint16_t>(y, x)));
+                for (int x = 0; x < m51.cols; x++)
+                {
+                    output_aufgabe24.at<uint8_t>(y, x) = static_cast<uint8_t>(grauwertspreizung(m51.at<uint16_t>(y, x)));
+                }
             }
+            cv::imshow("Aufgabe 24/33", output_aufgabe24);
         }
-        cv::imshow("Aufgabe 24", output_aufgabe24);
+        else { // Aufgabe 33: BGR
+            cv::Mat output_color(m51.size(), CV_8UC3);
+            for (int y = 0; y < m51.rows; y++)
+            {
+                for (int x = 0; x < m51.cols; x++)
+                {
+                    uint16_t pixel = m51.at<uint16_t>(y, x);
+                    if (pixel < g_lowerThreshold) { //Blau
+                        output_color.at<cv::Vec3b>(y, x) = cv::Vec3b(255, 0, 0);
+                    }
+                    else if (pixel > g_upperThreshold) { //Rot
+                        output_color.at<cv::Vec3b>(y, x) = cv::Vec3b(0, 0, 255);
+                    }
+                    else {
+                        uint8_t grau = static_cast<uint8_t>(grauwertspreizung(pixel));
+                        output_color.at<cv::Vec3b>(y, x) = cv::Vec3b(grau, grau, grau);
+                    }
+                }
+            }
+            cv::imshow("Aufgabe 24/33", output_color);
+        }
 
-        if (cv::waitKey(10) == 27)
-            break;
+        char key = (char)cv::waitKey(10);
+        if (key == 27) break; //ESC
+        else if (key == 'm' || key == 'M')
+        {
+            farbmodus = !farbmodus; // Wechsel zwischen 0 und 1
+            std::cout << "Mode switched to " << (farbmodus ? "Farbmodus" : "Grauwert") << std::endl;
+        }
     }
-
+    
     
 
 }
