@@ -1,4 +1,4 @@
-// ConsoleApplication_Windowing.cpp : This file contains the 'main' function. Program execution begins and ends there.
+﻿// ConsoleApplication_Windowing.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
 #include <iostream>
@@ -6,6 +6,7 @@
 #include <limits>
 #include <cstdint>
 #include <filesystem>
+#include <chrono>
 
 
 // Aufgabe 12:
@@ -27,41 +28,57 @@ float grauwertspreizung(int g, float wmax=255.0, float wmin=0.0) {
     return scaled;
 }
 
-// Aufgabe 26, 31, 32:
-static void onLowerThresholdTrackbar(int pos, void*);
-static void onUpperThresholdTrackbar(int pos, void*);
+// Aufgabe 42: 
+void optimize_using_cv(const cv::Mat& source, cv::Mat& destination, int lower, int upper) {
+    cv::Mat clipped;
+    cv::threshold(source, clipped, upper, upper, cv::THRESH_TRUNC); // truncate values above upper: pixel > upper, it is set to upper
+    cv::threshold(clipped, clipped, lower, 0, cv::THRESH_TOZERO); // pixel < lower, it is set to 0 
 
-static void onLowerThresholdTrackbar(int pos, void*)
-{
-    if (pos == 65535) pos = 65534;
-    if (pos < g_upperThreshold) {
-        g_lowerThreshold = pos;
-        std::cout << "new lower threshold : " << g_lowerThreshold << " upper threshold : " << g_upperThreshold << std::endl;
-    }
-    else {
-        g_lowerThreshold = pos;
-        int newupper = pos + 1;
-        onUpperThresholdTrackbar(newupper, nullptr);
-        cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
-        if (g_lowerThreshold < 0) g_lowerThreshold = 0;
-        std::cout << "new lower threshold : " << g_lowerThreshold << " new upper threshold : " << g_upperThreshold << std::endl;
-    }
+    // Scale values from [lower, upper] → [0, 255]
+    /*
+    * destination(x,y) = alpha x clipped(x,y) + beta
+    * FORMULAR above:float scaled = (wmax - wmin)*((float)(g-g_lowerThreshold)/(g_upperThreshold-g_lowerThreshold)) + wmin;
+    * => alpha = (wmax-wmin)/(g_upperThreshold - g_lowerThreshold)
+    * => beta = -(wmax-wmin)*g_lowerThreshold/(g_upperThreshold - g_lowerThreshold) + wmin 
+    */
+    float alpha = 255.0 / (upper - lower);
+    float beta = -255.0 * lower / (upper - lower);
+    clipped.convertTo(destination, CV_8U, alpha, beta); 
 }
-static void onUpperThresholdTrackbar(int pos, void*)
+void updateOutputImage(cv::Mat& src) {
+    cv::Mat output;
+    optimize_using_cv(src, output, g_lowerThreshold, g_upperThreshold);
+    cv::imshow("Output image", output);
+}
+// Aufgabe 26, 31, 32:
+
+static void onLowerThresholdTrackbar(int pos, void* userdata)
 {
-    if (pos == 0) pos = 1;
-    if (pos > g_lowerThreshold) {
-        g_upperThreshold = pos;
-        std::cout << "lower threshold : " << g_lowerThreshold << " new upper threshold : " << g_upperThreshold << std::endl;
+    cv::Mat* src = static_cast<cv::Mat*>(userdata); // cast void* back to Mat*
+    if (pos >= g_upperThreshold) {
+        g_lowerThreshold = g_upperThreshold - 1;
+    }
+    else {
+        g_lowerThreshold = pos;
+    }
+    if (g_lowerThreshold < 0) g_lowerThreshold = 0;
+    cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
+    updateOutputImage(*src);
+    std::cout << "Lower threshold: " << g_lowerThreshold << ", Upper threshold: " << g_upperThreshold << std::endl;
+}
+static void onUpperThresholdTrackbar(int pos, void* userdata)
+{
+    cv::Mat* src = static_cast<cv::Mat*>(userdata);
+    if (pos <= g_lowerThreshold) {
+        g_upperThreshold = g_lowerThreshold + 1;
     }
     else {
         g_upperThreshold = pos;
-        int newlower = pos - 1;
-        onLowerThresholdTrackbar(newlower, nullptr);
-        cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
-        if (g_upperThreshold > upperLimit) g_upperThreshold = upperLimit;
-        std::cout << "new lower threshold : " << g_lowerThreshold << " new upper threshold : " << g_upperThreshold << std::endl;
     }
+    if (g_upperThreshold > upperLimit) g_upperThreshold = upperLimit;
+    cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
+    updateOutputImage(*src);
+    std::cout << "Lower threshold: " << g_lowerThreshold << ", Upper threshold: " << g_upperThreshold << std::endl;
 }
 
 int main()
@@ -144,8 +161,8 @@ int main()
 
     /*
     * Aufgabe 21:
-    * a. Input: Sterne k�nnen schwach sein aber Hintergrundinformation bleibt 
-    * b. Output: Sterne oberhalb Threshold leuchen deutlicher. Der Hintergrund wurde �nterdr�ck.
+    * a. Input: Sterne können schwach sein aber Hintergrundinformation bleibt 
+    * b. Output: Sterne oberhalb Threshold leuchen deutlicher. Der Hintergrund wurde ünterdrück.
     */ 
 
     // Aufgabe 23:
@@ -154,8 +171,8 @@ int main()
     //cv::createTrackbar("Upper threshold", "Output image", &g_upperThreshold, upperLimit);
 
     // Aufgabe 27:
-    cv::createTrackbar("Lower threshold", "Output image", nullptr, upperLimit, onLowerThresholdTrackbar);
-    cv::createTrackbar("Upper threshold", "Output image", nullptr, upperLimit, onUpperThresholdTrackbar);
+    cv::createTrackbar("Lower threshold", "Output image", nullptr, upperLimit, onLowerThresholdTrackbar, &m51);
+    cv::createTrackbar("Upper threshold", "Output image", nullptr, upperLimit, onUpperThresholdTrackbar, &m51);
     // Aufgabe 28:
     cv::setTrackbarPos("Lower threshold", "Output image", g_lowerThreshold);
     cv::setTrackbarPos("Upper threshold", "Output image", g_upperThreshold);
@@ -166,6 +183,7 @@ int main()
     cv::Mat write_output_farb(m51.size(), CV_8UC3);
     // Aufgabe 42
     bool autoMode = true;
+    bool performanceTestMode = true;
     // Aufgabe 24: Interaktive Schleife
     while (true)
     {
@@ -190,6 +208,7 @@ int main()
             std::cout << "Auto step -> lower: " << g_lowerThreshold << ", upper: " << g_upperThreshold << std::endl;
         }
         if (!farbmodus) {
+            auto t1 = std::chrono::high_resolution_clock::now();
             cv::Mat output_aufgabe24(m51.size(), CV_8U);
             for (int y = 0; y < m51.rows; y++)
             {
@@ -199,7 +218,21 @@ int main()
                 }
             }
             write_output_grau = output_aufgabe24;
-            cv::imshow("Aufgabe 24/33", output_aufgabe24);
+            auto t2 = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> duration_loop = t2 - t1;
+            if(performanceTestMode) std::cout << "Loop version time: " << duration_loop.count() << "\n";
+            cv::imshow("Output image", output_aufgabe24);
+
+
+            // Aufgabe 42:
+            cv::Mat output_optimized;
+            auto t3 = std::chrono::high_resolution_clock::now();
+            optimize_using_cv(m51, output_optimized, g_lowerThreshold, g_upperThreshold);
+            auto t4 = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> duration_optimized = t4 - t3;
+            if(performanceTestMode) std::cout << "optimized version time: " << duration_optimized.count() << "\n";
+            cv::imshow("Output image", output_optimized);
+
         }
         else { // Aufgabe 33: BGR
             cv::Mat output_color(m51.size(), CV_8UC3);
@@ -242,7 +275,12 @@ int main()
             autoMode = !autoMode; // SPACE -> pause/resume
             std::cout << (autoMode ? "Auto mode resumed." : "Auto mode paused.") << std::endl;
         }
-
+        else if (key == 't')
+        {
+            performanceTestMode = !performanceTestMode;
+            std::cout << (performanceTestMode? "Performance Test mode resumed." : "Performance Test mode paused.") << std::endl;
+        }
+    
     }
     /*
     * Aufgabe 41:
@@ -250,9 +288,13 @@ int main()
     * b. Medizin, CT, MRI, ...
     * 
     * Aufgabe 42:
-    * automatisch inkrementiert lower und upper Threshold
+    * OpenCV optimized alternative:
+    * cv::threshold() statt 2 geschachtelten Schleifen
+    * 
+    * Aufgabe 43:
+    * Loop version time ~ 9ms/jedes mal ist upper/lower geändert 
+    * Optimized version time ~ 3ms/jedes mal ist upper/lower geändert 
+    * => 3 mal schneller
     */
     
-    
-
 }
