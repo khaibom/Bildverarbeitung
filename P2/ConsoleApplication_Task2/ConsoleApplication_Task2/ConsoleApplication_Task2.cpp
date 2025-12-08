@@ -78,6 +78,58 @@ void printMatInfo(const cv::Mat& img)
 }
 // <<< Aufgabe 11, 16
 
+// >>> Aufgabe 25
+int g_thresholdB = 0;
+int g_thresholdG = 0;
+int g_thresholdR = 0;
+
+int g_transparencyB = 100;
+int g_transparencyG = 100;
+int g_transparencyR = 100;
+
+cv::Mat B8_original, G8_original, R8_original;
+cv::Mat B8_display, G8_display, R8_display;
+
+void onThresholdBlueTrackbar(int, void*) {
+    cv::Mat threshold;
+    cv::threshold(B8_original, threshold, g_thresholdB, 255, cv::THRESH_TOZERO);
+    double alpha = g_transparencyB / 100.0;
+    cv::addWeighted(threshold, alpha, cv::Mat::zeros(threshold.size(), threshold.type()), 1.0 - alpha, 0, B8_display);
+    cv::imshow("8-bit B channel", B8_display);
+    std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB << "%\n";
+}
+
+void onTransparencyBlueTrackbar(int, void*) {
+    onThresholdBlueTrackbar(0, nullptr);
+}
+
+void onThresholdGreenTrackbar(int, void*) {
+    cv::Mat threshold;
+    cv::threshold(G8_original, threshold, g_thresholdG, 255, cv::THRESH_TOZERO);
+    double alpha = g_transparencyG / 100.0;
+    cv::addWeighted(threshold, alpha, cv::Mat::zeros(threshold.size(), threshold.type()), 1.0 - alpha, 0, G8_display);
+    cv::imshow("8-bit G channel", G8_display);
+    std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG << "%\n";
+}
+
+void onTransparencyGreenTrackbar(int, void*) {
+    onThresholdGreenTrackbar(0, nullptr);
+}
+
+void onThresholdRedTrackbar(int, void*) {
+    cv::Mat threshold;
+    cv::threshold(R8_original, threshold, g_thresholdR, 255, cv::THRESH_TOZERO);
+    double alpha = g_transparencyR / 100.0;
+    cv::addWeighted(threshold, alpha, cv::Mat::zeros(threshold.size(), threshold.type()), 1.0 - alpha, 0, R8_display);
+    cv::imshow("8-bit R channel", R8_display);
+    std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR << "%\n";
+}
+
+void onTransparencyRedTrackbar(int, void*) {
+    onThresholdRedTrackbar(0, nullptr);
+}
+
+// <<< Aufgabe 25
 
 int main()
 {
@@ -88,14 +140,14 @@ int main()
 
     std::cout <<"Aufgabe 11: \n";
     printMatInfo(input48);
-    cv::imshow("hela-cells 48 bit", input48);
+    //cv::imshow("hela-cells 48 bit", input48);
 
 
     // convert 48bit to 8bit for display the image
     cv::Mat input8;
     cv::normalize(input48, input8, 0, 255, cv::NORM_MINMAX, CV_8UC3);
 
-    cv::imshow("hela-cells 8 bit", input8);
+    //cv::imshow("hela-cells 8 bit", input8);
     std::cout << "\nAufgabe 14: \n";
     printMatInfo(input8);
 
@@ -145,9 +197,30 @@ int main()
     */
 
     // Aufgabe 23
-    cv::imshow("8 bit channel Blue", B8);
-    cv::imshow("8 bit channel Green", G8);
-    cv::imshow("8 bit channel Red", R8);
+    //cv::imshow("8-bit B channel", B8);
+    //cv::imshow("8-bit G channel", G8);
+    //cv::imshow("8-bit R channel", R8);
+
+    // Aufgabe 24
+    B8_original = B8.clone();
+    G8_original = G8.clone();
+    R8_original = R8.clone();
+    B8_display = B8.clone();
+    G8_display = G8.clone();
+    R8_display = R8.clone();
+
+    cv::imshow("8-bit B channel", B8_display);
+    cv::imshow("8-bit G channel", G8_display);
+    cv::imshow("8-bit R channel", R8_display);
+
+    cv::createTrackbar("Threshold B", "8-bit B channel", &g_thresholdB, 255, onThresholdBlueTrackbar);
+    cv::createTrackbar("Alpha B (%)", "8-bit B channel", &g_transparencyB, 100, onTransparencyBlueTrackbar);
+    cv::createTrackbar("Threshold G", "8-bit G channel", &g_thresholdG, 255, onThresholdGreenTrackbar);
+    cv::createTrackbar("Alpha G (%)", "8-bit G channel", &g_transparencyG, 100, onTransparencyGreenTrackbar);
+    cv::createTrackbar("Threshold R", "8-bit R channel", &g_thresholdR, 255, onThresholdRedTrackbar);
+    cv::createTrackbar("Alpha R (%)", "8-bit R channel", &g_transparencyR, 100, onTransparencyRedTrackbar);
+
+
     cv::waitKey(0);
 
 }
