@@ -131,17 +131,27 @@ void onTransparencyRedTrackbar(int, void*) {
 // <<< Aufgabe 25
 
 // >>> Aufgabe 26
-cv::Mat createBinaryImage(const cv::Mat& gray, int threshold)
-{
+cv::Mat createBinaryImage(const cv::Mat& gray, int threshold){
     cv::Mat binary = (gray > threshold);
-
-    // Optional: in 8-bit umwandeln (falls gray nicht CV_8U ist)
-    binary.convertTo(binary, CV_8U, 255);
-
     return binary;
 }
-
 // <<< Aufgabe 26
+
+// >>> Aufgabe 27
+cv::Mat applyThresholdColor(const cv::Mat& gray, int threshold, const cv::Scalar& color){
+    uchar grauWert = std::max({(uchar)color[0], (uchar)color[1], (uchar)color[2]}); // V von HSV
+    cv::Mat colored(gray.size(), CV_8UC3);
+    cv::Mat mask = createBinaryImage(gray, threshold);
+
+    // alle Pixel bis zum Schwellwert einen Grauwert erhalten
+    colored.setTo(cv::Scalar(grauWert, grauWert, grauWert));
+    // der bei Betrachtung des HSV-Farbsystems etwa als gleich hell wahrgenommen würde wie die vorgegebene Farbe
+    colored.setTo(color, mask);
+
+    return colored;
+}
+// <<< Aufgabe 27
+
 
 
 int main()
@@ -233,13 +243,20 @@ int main()
     cv::createTrackbar("Threshold R", "8-bit R channel", &g_thresholdR, 255, onThresholdRedTrackbar);
     cv::createTrackbar("Alpha R (%)", "8-bit R channel", &g_transparencyR, 100, onTransparencyRedTrackbar);
 
+    // Aufgabe 26
     cv::Mat binaryB = createBinaryImage(B8, g_thresholdB);
     cv::Mat binaryG = createBinaryImage(G8, g_thresholdG);
     cv::Mat binaryR = createBinaryImage(R8, g_thresholdR);
 
-    cv::imshow("Binary B8", binaryB);
-    cv::imshow("Binary G8", binaryG);
-    cv::imshow("Binary R8", binaryR);
+    //cv::imshow("Binary B8", binaryB);
+    //cv::imshow("Binary G8", binaryG);
+    //cv::imshow("Binary R8", binaryR);
+
+    // Aufgabe 27
+    cv::Scalar color(70, 120, 170);
+    cv::Mat aufgabe27 = applyThresholdColor(G8_display, g_thresholdG, color);
+    cv::imshow("Threshold Color Aufgabe 27", aufgabe27);
+
 
 
     cv::waitKey(0);
