@@ -83,9 +83,9 @@ int g_thresholdB = 60;
 int g_thresholdG = 60;
 int g_thresholdR = 60;
 
-int g_transparencyB = 100;
-int g_transparencyG = 100;
-int g_transparencyR = 100;
+int g_transparencyB = 70;
+int g_transparencyG = 70;
+int g_transparencyR = 70;
 
 cv::Mat B8_original, G8_original, R8_original;
 cv::Mat B8_display, G8_display, R8_display;
@@ -170,6 +170,29 @@ cv::Mat createOverlay(const cv::Mat& gray, int threshold, const cv::Scalar& colo
 }
 // <<< Aufgabe 28
 
+// >>> Aufgabe 29
+cv::Scalar colorB(255, 0, 0);   
+cv::Scalar colorG(0, 255, 0);   
+cv::Scalar colorR(0, 0, 255);   
+
+void updateBlueOverlay(int, void*) {
+    cv::Mat overlay = createOverlay(B8_original, g_thresholdB, colorB, g_transparencyB);
+    cv::imshow("8-bit B channel", overlay);
+    std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB << "%\n";
+}
+
+void updateGreenOverlay(int, void*) {
+    cv::Mat overlay = createOverlay(G8_original, g_thresholdG, colorG, g_transparencyG);
+    cv::imshow("8-bit G channel", overlay);
+    std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG << "%\n";
+}
+
+void updateRedOverlay(int, void*) {
+    cv::Mat overlay = createOverlay(R8_original, g_thresholdR, colorR, g_transparencyR);
+    cv::imshow("8-bit R channel", overlay);
+    std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR << "%\n";
+}
+// <<< Aufgabe 29
 
 
 int main()
@@ -254,12 +277,12 @@ int main()
     cv::imshow("8-bit G channel", G8_display);
     cv::imshow("8-bit R channel", R8_display);
 
-    cv::createTrackbar("Threshold B", "8-bit B channel", &g_thresholdB, 255, onThresholdBlueTrackbar);
-    cv::createTrackbar("Alpha B (%)", "8-bit B channel", &g_transparencyB, 100, onTransparencyBlueTrackbar);
-    cv::createTrackbar("Threshold G", "8-bit G channel", &g_thresholdG, 255, onThresholdGreenTrackbar);
-    cv::createTrackbar("Alpha G (%)", "8-bit G channel", &g_transparencyG, 100, onTransparencyGreenTrackbar);
-    cv::createTrackbar("Threshold R", "8-bit R channel", &g_thresholdR, 255, onThresholdRedTrackbar);
-    cv::createTrackbar("Alpha R (%)", "8-bit R channel", &g_transparencyR, 100, onTransparencyRedTrackbar);
+    //cv::createTrackbar("Threshold B", "8-bit B channel", &g_thresholdB, 255, onThresholdBlueTrackbar);
+    //cv::createTrackbar("Alpha B (%)", "8-bit B channel", &g_transparencyB, 100, onTransparencyBlueTrackbar);
+    //cv::createTrackbar("Threshold G", "8-bit G channel", &g_thresholdG, 255, onThresholdGreenTrackbar);
+    //cv::createTrackbar("Alpha G (%)", "8-bit G channel", &g_transparencyG, 100, onTransparencyGreenTrackbar);
+    //cv::createTrackbar("Threshold R", "8-bit R channel", &g_thresholdR, 255, onThresholdRedTrackbar);
+    //cv::createTrackbar("Alpha R (%)", "8-bit R channel", &g_transparencyR, 100, onTransparencyRedTrackbar);
 
     // Aufgabe 26
     cv::Mat binaryB = createBinaryImage(B8, g_thresholdB);
@@ -273,11 +296,20 @@ int main()
     // Aufgabe 27
     cv::Scalar color(70, 120, 170);
     cv::Mat aufgabe27 = applyThresholdColor(G8_display, g_thresholdG, color);
-    cv::imshow("Threshold Color Aufgabe 27", aufgabe27);
+    //cv::imshow("Threshold Color Aufgabe 27", aufgabe27);
 
     // Aufgabe 28
     cv::Mat aufgabe28 = createOverlay(G8_display, g_thresholdG, color, 90);
-    cv::imshow("Overlay Aufgabe 28", aufgabe28);
+    //cv::imshow("Overlay Aufgabe 28", aufgabe28);
+
+    // Aufgabe 29
+    cv::createTrackbar("Threshold B", "8-bit B channel", &g_thresholdB, 255, updateBlueOverlay);
+    cv::createTrackbar("Alpha B (%)", "8-bit B channel", &g_transparencyB, 100, updateBlueOverlay);
+    cv::createTrackbar("Threshold G", "8-bit G channel", &g_thresholdG, 255, updateGreenOverlay);
+    cv::createTrackbar("Alpha G (%)", "8-bit G channel", &g_transparencyG, 100, updateGreenOverlay);
+    cv::createTrackbar("Threshold R", "8-bit R channel", &g_thresholdR, 255, updateRedOverlay);
+    cv::createTrackbar("Alpha R (%)", "8-bit R channel", &g_transparencyR, 100, updateRedOverlay);
+
 
     cv::waitKey(0);
 
