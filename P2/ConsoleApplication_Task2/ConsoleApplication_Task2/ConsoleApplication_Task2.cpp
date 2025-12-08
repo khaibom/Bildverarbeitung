@@ -79,9 +79,9 @@ void printMatInfo(const cv::Mat& img)
 // <<< Aufgabe 11, 16
 
 // >>> Aufgabe 25
-int g_thresholdB = 0;
-int g_thresholdG = 0;
-int g_thresholdR = 0;
+int g_thresholdB = 60;
+int g_thresholdG = 60;
+int g_thresholdR = 60;
 
 int g_transparencyB = 100;
 int g_transparencyG = 100;
@@ -128,8 +128,21 @@ void onThresholdRedTrackbar(int, void*) {
 void onTransparencyRedTrackbar(int, void*) {
     onThresholdRedTrackbar(0, nullptr);
 }
-
 // <<< Aufgabe 25
+
+// >>> Aufgabe 26
+cv::Mat createBinaryImage(const cv::Mat& gray, int threshold)
+{
+    cv::Mat binary = (gray > threshold);
+
+    // Optional: in 8-bit umwandeln (falls gray nicht CV_8U ist)
+    binary.convertTo(binary, CV_8U, 255);
+
+    return binary;
+}
+
+// <<< Aufgabe 26
+
 
 int main()
 {
@@ -219,6 +232,14 @@ int main()
     cv::createTrackbar("Alpha G (%)", "8-bit G channel", &g_transparencyG, 100, onTransparencyGreenTrackbar);
     cv::createTrackbar("Threshold R", "8-bit R channel", &g_thresholdR, 255, onThresholdRedTrackbar);
     cv::createTrackbar("Alpha R (%)", "8-bit R channel", &g_transparencyR, 100, onTransparencyRedTrackbar);
+
+    cv::Mat binaryB = createBinaryImage(B8, g_thresholdB);
+    cv::Mat binaryG = createBinaryImage(G8, g_thresholdG);
+    cv::Mat binaryR = createBinaryImage(R8, g_thresholdR);
+
+    cv::imshow("Binary B8", binaryB);
+    cv::imshow("Binary G8", binaryG);
+    cv::imshow("Binary R8", binaryR);
 
 
     cv::waitKey(0);
