@@ -152,6 +152,24 @@ cv::Mat applyThresholdColor(const cv::Mat& gray, int threshold, const cv::Scalar
 }
 // <<< Aufgabe 27
 
+// >>> Aufgabe 28
+cv::Mat createOverlay(const cv::Mat& gray, int threshold, const cv::Scalar& color, int transparency){
+    cv::Mat highlighted = applyThresholdColor(gray, threshold, color);
+
+    // Einkanalbild in 3-Kanal umwandeln für addWeighted
+    cv::Mat gray3;
+    cv::cvtColor(gray, gray3, cv::COLOR_GRAY2BGR);
+
+    double alpha = transparency / 100.0;
+    double beta = 1.00 - alpha;
+    double gamma = 0.0;
+    cv::Mat overlay;
+    cv::addWeighted(highlighted, alpha, gray3, beta, gamma, overlay);
+
+    return overlay;
+}
+// <<< Aufgabe 28
+
 
 
 int main()
@@ -257,7 +275,9 @@ int main()
     cv::Mat aufgabe27 = applyThresholdColor(G8_display, g_thresholdG, color);
     cv::imshow("Threshold Color Aufgabe 27", aufgabe27);
 
-
+    // Aufgabe 28
+    cv::Mat aufgabe28 = createOverlay(G8_display, g_thresholdG, color, 90);
+    cv::imshow("Overlay Aufgabe 28", aufgabe28);
 
     cv::waitKey(0);
 
