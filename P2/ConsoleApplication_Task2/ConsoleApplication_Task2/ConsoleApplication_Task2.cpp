@@ -1,8 +1,11 @@
-
+﻿
 
 #include <iostream>
 #include "opencv2/opencv.hpp"
-
+#include <stdexcept>
+#include <vector>
+#include <numeric>
+#include <cmath>
 
 // >>> Aufgabe 11, 16
 std::string getColorSystem(const cv::Mat& img)
@@ -145,7 +148,7 @@ cv::Mat applyThresholdColor(const cv::Mat& gray, int threshold, const cv::Scalar
 
     // alle Pixel bis zum Schwellwert einen Grauwert erhalten
     colored.setTo(cv::Scalar(grauWert, grauWert, grauWert));
-    // der bei Betrachtung des HSV-Farbsystems etwa als gleich hell wahrgenommen w�rde wie die vorgegebene Farbe
+    // der bei Betrachtung des HSV-Farbsystems etwa als gleich hell wahrgenommen würde wie die vorgegebene Farbe
     colored.setTo(color, mask);
 
     return colored;
@@ -156,7 +159,7 @@ cv::Mat applyThresholdColor(const cv::Mat& gray, int threshold, const cv::Scalar
 cv::Mat createOverlay(const cv::Mat& gray, int threshold, const cv::Scalar& color, int transparency){
     cv::Mat highlighted = applyThresholdColor(gray, threshold, color);
 
-    // Einkanalbild in 3-Kanal umwandeln f�r addWeighted
+    // Einkanalbild in 3-Kanal umwandeln für addWeighted
     cv::Mat gray3;
     cv::cvtColor(gray, gray3, cv::COLOR_GRAY2BGR);
 
@@ -193,6 +196,104 @@ void updateRedOverlay(int, void*) {
     std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR << "%\n";
 }
 // <<< Aufgabe 29
+
+// >>> Aufgabe 31
+class OtsuThresholdProvider {
+private:
+    size_t m_numPixels;
+    std::vector<size_t> m_ordinaryAbsoluteHistogram;
+    std::vector<double> m_ordinaryRelativeHistogram;
+    std::vector<size_t> m_cumulativeAbsoluteHistogram;
+    std::vector<double> m_cumulativeRelativeHistogram;
+    double m_mean;
+    double m_variance;
+    std::vector<double> m_criterionMeasures;
+    int m_otsuThreshold;
+public:
+    OtsuThresholdProvider(const std::vector<size_t>& absoluteHistogram) : m_ordinaryAbsoluteHistogram(absoluteHistogram)
+    {
+        // Pixel Anzahl: m_numPixels
+        m_numPixels = std::accumulate(absoluteHistogram.begin(), absoluteHistogram.end(), 0ull);
+
+        // Relative Histogramme: m_ordinaryRelativeHistogram
+        m_ordinaryRelativeHistogram.resize(256);
+        for (int i = 0; i < 256; i++) {
+            m_ordinaryRelativeHistogram[i] = double(absoluteHistogram[i]) / m_numPixels;
+        }
+
+        // Kumulative Histogramme: m_cumulativeAbsoluteHistogram, m_cumulativeRelativeHistogram
+        m_cumulativeAbsoluteHistogram.resize(256);
+        m_cumulativeRelativeHistogram.resize(256);
+        size_t absSum = 0;
+        double relSum = 0.0;
+        for (int i = 0; i < 256; i++)
+        {
+            absSum += absoluteHistogram[i];
+            relSum += m_ordinaryRelativeHistogram[i];
+            m_cumulativeAbsoluteHistogram[i] = absSum;
+            m_cumulativeRelativeHistogram[i] = relSum;
+        }
+
+        // Gesamt-Mittelwert: m_mean
+        m_mean = 0.0;
+        for (int i = 0; i < 256; i++) {
+            m_mean += i * m_ordinaryRelativeHistogram[i];
+        }
+
+        // Gesamt-Varianz: m_variance
+        m_variance = 0.0;
+        for (int i = 0; i < 256; i++) {
+            m_variance += (i - m_mean) * (i - m_mean) * m_ordinaryRelativeHistogram[i];
+        }
+
+        // Für jeden t: σ_B²(t) berechnen
+        m_criterionMeasures.resize(256, 0.0);
+
+        double bestCriterion = -1.0;
+        int bestT = 0;
+
+        for (int t = 0; t < 255; t++)
+        {
+            double w0 = m_cumulativeRelativeHistogram[t];
+            double w1 = 1.0 - w0;
+            if (w0 == 0 || w1 == 0)
+                continue;
+
+            // μ0 berechnen
+            double mu0 = 0.0;
+            for (int i = 0; i <= t; i++)
+                mu0 += i * m_ordinaryRelativeHistogram[i];
+            mu0 /= w0;
+
+            // μ1 berechnen
+            double mu1 = 0.0;
+            for (int i = t + 1; i < 256; i++)
+                mu1 += i * m_ordinaryRelativeHistogram[i];
+            mu1 /= w1;
+
+            // Between-Class-Variance
+            double sigmaB2 = w0 * w1 * (mu0 - mu1) * (mu0 - mu1);
+            double criterion = sigmaB2 / m_variance;   // Gütekriterium
+
+            m_criterionMeasures[t] = criterion;
+
+            if (criterion > bestCriterion)
+            {
+                bestCriterion = criterion;
+                bestT = t;
+            }
+        }
+
+        m_otsuThreshold = bestT;
+    }
+
+    int getThreshold() const { return m_otsuThreshold; }
+ 
+
+};
+
+// >>> Aufgabe 31
+
 
 
 int main()
@@ -309,6 +410,13 @@ int main()
     cv::createTrackbar("Alpha G (%)", "8-bit G channel", &g_transparencyG, 100, updateGreenOverlay);
     cv::createTrackbar("Threshold R", "8-bit R channel", &g_thresholdR, 255, updateRedOverlay);
     cv::createTrackbar("Alpha R (%)", "8-bit R channel", &g_transparencyR, 100, updateRedOverlay);
+
+    /*
+    * Aufgabe 30:
+    * Bei Threshhold 45, Transparenz 50% 
+    * es gibt aber noch Loch in einem Zellkern, Flecken 
+    * => die Segmentierung ist entweder unvöllständig oder enthält viel falsch positive Pixel wegen Rauschen
+    */
 
 
     cv::waitKey(0);
