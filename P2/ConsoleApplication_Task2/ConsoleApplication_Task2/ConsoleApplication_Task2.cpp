@@ -588,7 +588,51 @@ int main()
     * Filterung
     * Morphologie
     */
+
+    // Aufgabe 39:
+    cv::Mat imgYCrCb, imgLab;
+    cv::cvtColor(input8, imgYCrCb, cv::COLOR_BGR2YCrCb);
+    cv::cvtColor(input8, imgLab, cv::COLOR_BGR2Lab);
+    //cv::imshow("YCrCb 3 channels", imgYCrCb);
+    //cv::imshow("Lab 3 channels", imgLab);
  
+    // Aufgabe 41:
+    std::vector<cv::Mat> ycrcb, lab;
+    cv::split(imgYCrCb, ycrcb);
+    cv::split(imgLab, lab);
+
+    cv::Mat Y8, Cr8, Cb8;
+    cv::normalize(ycrcb[0], Y8, 0, 255, cv::NORM_MINMAX, CV_8U);
+    cv::normalize(ycrcb[1], Cr8, 0, 255, cv::NORM_MINMAX, CV_8U);
+    cv::normalize(ycrcb[2], Cb8, 0, 255, cv::NORM_MINMAX, CV_8U);
+    cv::Mat L8, a8, b8;
+    cv::normalize(lab[0], L8, 0, 255, cv::NORM_MINMAX, CV_8U);
+    cv::normalize(lab[1], a8, 0, 255, cv::NORM_MINMAX, CV_8U);
+    cv::normalize(lab[2], b8, 0, 255, cv::NORM_MINMAX, CV_8U);
+
+    //cv::imshow("Y", Y8);
+    //cv::imshow("Cr", Cr8);
+    //cv::imshow("Cb", Cb8);
+    //cv::imshow("L", L8);
+    //cv::imshow("a", a8);
+    //cv::imshow("b", b8);
+
+    // Aufgabe 42:
+    //B8_original = Y8.clone();
+    //G8_original = Cr8.clone();
+    //R8_original = Cb8.clone();
+    //otsuB = new OtsuThresholdProvider(computeHistogram(Y8));
+    //otsuG = new OtsuThresholdProvider(computeHistogram(Cr8));
+    //otsuR = new OtsuThresholdProvider(computeHistogram(Cb8)); 
+
+    B8_original = L8.clone();
+    G8_original = a8.clone();
+    R8_original = b8.clone();
+    otsuB = new OtsuThresholdProvider(computeHistogram(L8));
+    otsuG = new OtsuThresholdProvider(computeHistogram(a8));
+    otsuR = new OtsuThresholdProvider(computeHistogram(b8));
+
+
     while (true) {
         char key = (char)cv::waitKey(30);
 
