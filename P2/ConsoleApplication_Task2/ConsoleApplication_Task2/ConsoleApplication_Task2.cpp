@@ -106,6 +106,10 @@ public:
         return m_criterionMeasures;
     }
 
+    int getOtsuThreshold() const {
+        return m_otsuThreshold;
+    }
+
 };
 // >>> Aufgabe 31
 
@@ -194,10 +198,16 @@ void printMatInfo(const cv::Mat& img)
 }
 // <<< Aufgabe 11, 16
 
+// >>> Aufgabe 32
+OtsuThresholdProvider* otsuR = nullptr;
+OtsuThresholdProvider* otsuG = nullptr;
+OtsuThresholdProvider* otsuB = nullptr;
+// >>> Aufgabe 32
+
 // >>> Aufgabe 25
-int g_thresholdB = 60;
-int g_thresholdG = 60;
-int g_thresholdR = 60;
+int g_thresholdB = otsuB ? otsuB->getOtsuThreshold() : 60;
+int g_thresholdG = otsuG ? otsuG->getOtsuThreshold() : 60;
+int g_thresholdR = otsuR ? otsuR->getOtsuThreshold() : 60;
 
 int g_transparencyB = 70;
 int g_transparencyG = 70;
@@ -206,12 +216,6 @@ int g_transparencyR = 70;
 cv::Mat B8_original, G8_original, R8_original;
 cv::Mat B8_display, G8_display, R8_display;
 
-
-// >>> Aufgabe 32
-OtsuThresholdProvider* otsuR = nullptr;
-OtsuThresholdProvider* otsuG = nullptr;
-OtsuThresholdProvider* otsuB = nullptr;
-// >>> Aufgabe 32
 
 void onThresholdBlueTrackbar(int, void*) {
     cv::Mat threshold;
@@ -418,15 +422,15 @@ void updateAllDiagrams() {
     cumHistR = createLineDiagram(otsuR->getCumulativeRelativeHistogram(), g_thresholdR, colorR);
 
     cv::imshow("criterion measures for B channel", critB);
-    cv::imshow("criterion measures for G channel", histG);
-    cv::imshow("criterion measures for R channel", cumHistR);
+    cv::imshow("criterion measures for G channel", critG);
+    cv::imshow("criterion measures for R channel", critR);
 
-    cv::imshow("ordinary relative histogram for B channel", critB);
+    cv::imshow("ordinary relative histogram for B channel", histB);
     cv::imshow("ordinary relative histogram for G channel", histG);
-    cv::imshow("ordinary relative histogram for R channel", cumHistR);
+    cv::imshow("ordinary relative histogram for R channel", histR);
 
-    cv::imshow("cumulative relative histogram for B channel", critB);
-    cv::imshow("cumulative relative histogram for G channel", histG);
+    cv::imshow("cumulative relative histogram for B channel", cumHistB);
+    cv::imshow("cumulative relative histogram for G channel", cumHistG);
     cv::imshow("cumulative relative histogram for R channel", cumHistR);
 }
 // <<< Aufgabe 36
@@ -528,6 +532,9 @@ int main()
     cv::Mat binaryB = createBinaryImage(B8, g_thresholdB);
     cv::Mat binaryG = createBinaryImage(G8, g_thresholdG);
     cv::Mat binaryR = createBinaryImage(R8, g_thresholdR);
+    g_thresholdB = otsuB ? otsuB->getOtsuThreshold() : 60;
+    g_thresholdG = otsuG ? otsuG->getOtsuThreshold() : 60;
+    g_thresholdR = otsuR ? otsuR->getOtsuThreshold() : 60;
 
     //cv::imshow("Binary B8", binaryB);
     //cv::imshow("Binary G8", binaryG);
@@ -557,20 +564,30 @@ int main()
     * => die Segmentierung ist entweder unvöllständig oder enthält viel falsch positive Pixel wegen Rauschen
     */
 
-    // Aufgabe 34
+    // Aufgabe 34:
     //cv::imshow("criterion measures for B channel", createLineDiagram(otsuB->getCriterionMeasures()));
     //cv::imshow("criterion measures for G channel", createLineDiagram(otsuG->getCriterionMeasures()));
     //cv::imshow("criterion measures for R channel", createLineDiagram(otsuR->getCriterionMeasures()));
-
     //cv::imshow("ordinary relative histogram for B channel", createLineDiagram(otsuB->getOrdinaryRelativeHistogram()));
     //cv::imshow("ordinary relative histogram for G channel", createLineDiagram(otsuG->getOrdinaryRelativeHistogram()));
     //cv::imshow("ordinary relative histogram for R channel", createLineDiagram(otsuR->getOrdinaryRelativeHistogram()));
-
     //cv::imshow("cumulative relative histogram for B channel", createLineDiagram(otsuB->getCumulativeRelativeHistogram()));
     //cv::imshow("cumulative relative histogram for G channel", createLineDiagram(otsuG->getCumulativeRelativeHistogram()));
     //cv::imshow("cumulative relative histogram for R channel", createLineDiagram(otsuR->getCumulativeRelativeHistogram()));
 
-    
+    /*
+    * Aufgabe 38:
+    * Die implementierte Gesamtfunktionalität arbeitet stabil und wie vorgesehen.
+    * Der Otsu-Schwellwert liefert grundsätzlich akzeptable Ergebnisse für die Segmentierung der Zellkerne.
+    * Die Mehrheit der Zellkerne wird korrekt erkannt.
+    * Der automatisch bestimmte Schwellwert liegt nahe am Maximum der Kriteriumsfunktion.
+    * Kleine Strukturen oder schwach kontrastierte Zellkerne werden teilweise nicht erfasst.
+    * Inhomogene Ausleuchtung beeinträchtigt die Trennung von Vorder- und Hintergrund.
+    * 
+    * Verbesserungsmethode:
+    * Filterung
+    * Morphologie
+    */
  
     while (true) {
         char key = (char)cv::waitKey(30);
