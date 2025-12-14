@@ -92,8 +92,32 @@ public:
     double getCriterion(int i) {
         return m_criterionMeasures[i];
     }
+
+    const std::vector<double>& getOrdinaryRelativeHistogram() const {
+        return m_ordinaryRelativeHistogram;
+    }
+
+    const std::vector<double>& getCumulativeRelativeHistogram() const {
+        return m_cumulativeRelativeHistogram;
+    }
+
+    const std::vector<double>& getCriterionMeasures() const {
+        return m_criterionMeasures;
+    }
+
 };
 // >>> Aufgabe 31
+
+std::vector<size_t> computeHistogram(const cv::Mat& img) {
+    std::vector<size_t> histogram(256, 0);
+    for (int y = 0; y < img.rows; y++) {
+        for (int x = 0; x < img.cols; x++) {
+            uchar v = img.at<uchar>(y, x);
+            histogram[v]++;
+        }
+    }
+    return histogram;
+}
 
 // >>> Aufgabe 11, 16
 std::string getColorSystem(const cv::Mat& img)
@@ -196,7 +220,7 @@ void onThresholdBlueTrackbar(int, void*) {
     cv::imshow("8-bit B channel", B8_display);
     double criterionB = otsuB ? otsuB->getCriterion(g_thresholdB) : 0.0;
     std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB 
-              << ", Otsu Criterion: " << criterionB << "%\n";
+              << "%, Otsu Criterion: " << criterionB << "\n";
 }
 
 void onTransparencyBlueTrackbar(int, void*) {
@@ -211,7 +235,7 @@ void onThresholdGreenTrackbar(int, void*) {
     cv::imshow("8-bit G channel", G8_display);
     double criterionG = otsuG ? otsuG->getCriterion(g_thresholdG) : 0.0;
     std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG
-              << ", Otsu Criterion: "  << criterionG << "%\n";
+              << "%, Otsu Criterion: "  << criterionG << "\n";
 }
 
 void onTransparencyGreenTrackbar(int, void*) {
@@ -226,7 +250,7 @@ void onThresholdRedTrackbar(int, void*) {
     cv::imshow("8-bit R channel", R8_display);
     double criterionR = otsuR ? otsuR->getCriterion(g_thresholdR) : 0.0;
     std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR
-        << ", Otsu Criterion: " << criterionR << "%\n";
+        << "%, Otsu Criterion: " << criterionR << "\n";
 }
 
 void onTransparencyRedTrackbar(int, void*) {
@@ -282,23 +306,48 @@ cv::Scalar colorR(0, 0, 255);
 void updateBlueOverlay(int, void*) {
     cv::Mat overlay = createOverlay(B8_original, g_thresholdB, colorB, g_transparencyB);
     cv::imshow("8-bit B channel", overlay);
-    std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB << "%\n";
+    double criterionB = otsuB ? otsuB->getCriterion(g_thresholdB) : 0.0;
+    std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB
+        << "%, Otsu Criterion: " << criterionB << "\n";
 }
 
 void updateGreenOverlay(int, void*) {
     cv::Mat overlay = createOverlay(G8_original, g_thresholdG, colorG, g_transparencyG);
     cv::imshow("8-bit G channel", overlay);
-    std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG << "%\n";
+    double criterionG = otsuG ? otsuG->getCriterion(g_thresholdG) : 0.0;
+    std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG
+        << "%, Otsu Criterion: " << criterionG << "\n";
 }
 
 void updateRedOverlay(int, void*) {
     cv::Mat overlay = createOverlay(R8_original, g_thresholdR, colorR, g_transparencyR);
     cv::imshow("8-bit R channel", overlay);
-    std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR << "%\n";
+    double criterionR = otsuR ? otsuR->getCriterion(g_thresholdR) : 0.0;
+    std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR
+        << "%, Otsu Criterion: " << criterionR << "\n";
 }
 // <<< Aufgabe 29
 
+// >>> Aufgabe 33
+cv::Mat createLineDiagram(const std::vector<double>& values, int width = 512, int height = 512) {
+    cv::Mat diagram(height, width, CV_8UC3, cv::Scalar(255, 255, 255));
 
+    int bins = static_cast<int>(values.size());
+    double maxVal = *std::max_element(values.begin(), values.end());
+    if (maxVal == 0.0) maxVal = 1.0;
+    int binWidth = cvRound((double)width / bins);
+
+    for (int i = 1; i < bins; i++) {
+        cv::line(diagram,
+            cv::Point(binWidth * (i - 1), height - cvRound(values[i - 1] / maxVal * height)),
+            cv::Point(binWidth * i, height - cvRound(values[i] / maxVal * height)),
+            cv::Scalar(0, 0, 0),
+            2
+        );
+    }
+    return diagram;
+}
+// <<< Aufgabe 33
 
 
 
@@ -360,6 +409,10 @@ int main()
     printMatInfo(R8);
     std::cout << "Normalized Red Channel (8-bit)\n";
     printMatInfo(G8);
+
+    otsuB = new OtsuThresholdProvider(computeHistogram(B8));
+    otsuG = new OtsuThresholdProvider(computeHistogram(G8));
+    otsuR = new OtsuThresholdProvider(computeHistogram(R8));
 
     /*
     * Aufgabe 22
@@ -423,6 +476,19 @@ int main()
     * es gibt aber noch Loch in einem Zellkern, Flecken 
     * => die Segmentierung ist entweder unvöllständig oder enthält viel falsch positive Pixel wegen Rauschen
     */
+
+    // Aufgabe 34
+    cv::imshow("criterion measures for B channel", createLineDiagram(otsuB->getCriterionMeasures()));
+    cv::imshow("criterion measures for G channel", createLineDiagram(otsuG->getCriterionMeasures()));
+    cv::imshow("criterion measures for R channel", createLineDiagram(otsuR->getCriterionMeasures()));
+
+    cv::imshow("ordinary relative histogram for B channel", createLineDiagram(otsuB->getOrdinaryRelativeHistogram()));
+    cv::imshow("ordinary relative histogram for G channel", createLineDiagram(otsuG->getOrdinaryRelativeHistogram()));
+    cv::imshow("ordinary relative histogram for R channel", createLineDiagram(otsuR->getOrdinaryRelativeHistogram()));
+
+    cv::imshow("cumulative relative histogram for B channel", createLineDiagram(otsuB->getCumulativeRelativeHistogram()));
+    cv::imshow("cumulative relative histogram for G channel", createLineDiagram(otsuG->getCumulativeRelativeHistogram()));
+    cv::imshow("cumulative relative histogram for R channel", createLineDiagram(otsuR->getCumulativeRelativeHistogram()));
 
     
     cv::waitKey(0);
