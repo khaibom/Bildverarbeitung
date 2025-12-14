@@ -6,6 +6,7 @@
 #include <vector>
 #include <numeric>
 #include <cmath>
+#include <filesystem>
 
 // >>> Aufgabe 31
 class OtsuThresholdProvider {
@@ -304,10 +305,11 @@ cv::Scalar colorG(0, 255, 0);
 cv::Scalar colorR(0, 0, 255);   
 
 void updateAllDiagrams();
+cv::Mat overlayB, overlayG, overlayR;
 
 void updateBlueOverlay(int, void*) {
-    cv::Mat overlay = createOverlay(B8_original, g_thresholdB, colorB, g_transparencyB);
-    cv::imshow("8-bit B channel", overlay);
+    overlayB = createOverlay(B8_original, g_thresholdB, colorB, g_transparencyB);
+    cv::imshow("8-bit B channel", overlayB);
     double criterionB = otsuB ? otsuB->getCriterion(g_thresholdB) : 0.0;
     std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB
         << "%, Otsu Criterion: " << criterionB << "\n";
@@ -315,8 +317,8 @@ void updateBlueOverlay(int, void*) {
 }
 
 void updateGreenOverlay(int, void*) {
-    cv::Mat overlay = createOverlay(G8_original, g_thresholdG, colorG, g_transparencyG);
-    cv::imshow("8-bit G channel", overlay);
+    overlayG = createOverlay(G8_original, g_thresholdG, colorG, g_transparencyG);
+    cv::imshow("8-bit G channel", overlayG);
     double criterionG = otsuG ? otsuG->getCriterion(g_thresholdG) : 0.0;
     std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG
         << "%, Otsu Criterion: " << criterionG << "\n";
@@ -324,8 +326,8 @@ void updateGreenOverlay(int, void*) {
 }
 
 void updateRedOverlay(int, void*) {
-    cv::Mat overlay = createOverlay(R8_original, g_thresholdR, colorR, g_transparencyR);
-    cv::imshow("8-bit R channel", overlay);
+    overlayR = createOverlay(R8_original, g_thresholdR, colorR, g_transparencyR);
+    cv::imshow("8-bit R channel", overlayR);
     double criterionR = otsuR ? otsuR->getCriterion(g_thresholdR) : 0.0;
     std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR
         << "%, Otsu Criterion: " << criterionR << "\n";
@@ -362,19 +364,70 @@ cv::Mat createLineDiagram(const std::vector<double>& values,
 }
 // <<< Aufgabe 33
 
+// >>> Aufgabe 37
+cv::Mat critB, critG, critR;
+cv::Mat histB, histG, histR;
+cv::Mat cumHistB, cumHistG, cumHistR;
+void safeImwrite(const std::string& filename, const cv::Mat& img) {
+    if (img.empty()) {
+        std::cerr << "WARNING: Image not saved (empty): " << filename << "\n";
+        return;
+    }
+    cv::imwrite(filename, img);
+}
+
+void saveAllImages() {
+    std::string base = "D:\\FH Aachen\\Sem 5\\Bildverarbeitung\\Praktikum\\P2\\output\\";
+
+    safeImwrite(base + "B_overlay_T" + std::to_string(g_thresholdB) +
+        "_alpha" + std::to_string(g_transparencyB) + ".png", overlayB);
+    safeImwrite(base + "B_criterion_T" + std::to_string(g_thresholdB) + ".png", critB);
+    safeImwrite(base + "B_hist_T" + std::to_string(g_thresholdB) + ".png", histB);
+    safeImwrite(base + "B_cumhist_T" + std::to_string(g_thresholdB) + ".png", cumHistB);
+
+    safeImwrite(base + "G_overlay_T" + std::to_string(g_thresholdG) +
+        "_alpha" + std::to_string(g_transparencyG) + ".png", overlayG);
+    safeImwrite(base + "G_criterion_T" + std::to_string(g_thresholdG) + ".png", critG);
+    safeImwrite(base + "G_hist_T" + std::to_string(g_thresholdG) + ".png", histG);
+    safeImwrite(base + "G_cumhist_T" + std::to_string(g_thresholdG) + ".png", cumHistG);
+
+    safeImwrite(base + "R_overlay_T" + std::to_string(g_thresholdR) +
+        "_alpha" + std::to_string(g_transparencyR) + ".png", overlayR);
+    safeImwrite(base + "R_criterion_T" + std::to_string(g_thresholdR) + ".png", critR);
+    safeImwrite(base + "R_hist_T" + std::to_string(g_thresholdR) + ".png", histR);
+    safeImwrite(base + "R_cumhist_T" + std::to_string(g_thresholdR) + ".png", cumHistR);
+
+    std::cout << "Save attempt finished.\n";
+}
+
+
+// <<< Aufgabe 37
+
 // >>> Aufgabe 36
 void updateAllDiagrams() {
-    cv::imshow("criterion measures for B channel", createLineDiagram(otsuB->getCriterionMeasures(), g_thresholdB, colorB));
-    cv::imshow("criterion measures for G channel", createLineDiagram(otsuG->getCriterionMeasures(), g_thresholdG, colorG));
-    cv::imshow("criterion measures for R channel", createLineDiagram(otsuR->getCriterionMeasures(), g_thresholdR, colorR));
+    critB = createLineDiagram(otsuB->getCriterionMeasures(), g_thresholdB, colorB);
+    histB = createLineDiagram(otsuB->getOrdinaryRelativeHistogram(), g_thresholdB, colorB);
+    cumHistB = createLineDiagram(otsuB->getCumulativeRelativeHistogram(), g_thresholdB, colorB);
 
-    cv::imshow("ordinary relative histogram for B channel", createLineDiagram(otsuB->getOrdinaryRelativeHistogram(), g_thresholdB, colorB));
-    cv::imshow("ordinary relative histogram for G channel", createLineDiagram(otsuG->getOrdinaryRelativeHistogram(), g_thresholdG, colorG));
-    cv::imshow("ordinary relative histogram for R channel", createLineDiagram(otsuR->getOrdinaryRelativeHistogram(), g_thresholdR, colorR));
+    critG = createLineDiagram(otsuG->getCriterionMeasures(), g_thresholdG, colorG);
+    histG = createLineDiagram(otsuG->getOrdinaryRelativeHistogram(), g_thresholdG, colorG);
+    cumHistG = createLineDiagram(otsuG->getCumulativeRelativeHistogram(), g_thresholdG, colorG);
 
-    cv::imshow("cumulative relative histogram for B channel", createLineDiagram(otsuB->getCumulativeRelativeHistogram(), g_thresholdB, colorB));
-    cv::imshow("cumulative relative histogram for G channel", createLineDiagram(otsuG->getCumulativeRelativeHistogram(), g_thresholdG, colorG));
-    cv::imshow("cumulative relative histogram for R channel", createLineDiagram(otsuR->getCumulativeRelativeHistogram(), g_thresholdR, colorR));
+    critR = createLineDiagram(otsuR->getCriterionMeasures(), g_thresholdR, colorR);
+    histR = createLineDiagram(otsuR->getOrdinaryRelativeHistogram(), g_thresholdR, colorR);
+    cumHistR = createLineDiagram(otsuR->getCumulativeRelativeHistogram(), g_thresholdR, colorR);
+
+    cv::imshow("criterion measures for B channel", critB);
+    cv::imshow("criterion measures for G channel", histG);
+    cv::imshow("criterion measures for R channel", cumHistR);
+
+    cv::imshow("ordinary relative histogram for B channel", critB);
+    cv::imshow("ordinary relative histogram for G channel", histG);
+    cv::imshow("ordinary relative histogram for R channel", cumHistR);
+
+    cv::imshow("cumulative relative histogram for B channel", critB);
+    cv::imshow("cumulative relative histogram for G channel", histG);
+    cv::imshow("cumulative relative histogram for R channel", cumHistR);
 }
 // <<< Aufgabe 36
 
@@ -518,7 +571,17 @@ int main()
     //cv::imshow("cumulative relative histogram for R channel", createLineDiagram(otsuR->getCumulativeRelativeHistogram()));
 
     
-    cv::waitKey(0);
+ 
+    while (true) {
+        char key = (char)cv::waitKey(30);
+
+        if (key == 's' || key == 'S') {
+            saveAllImages();
+        }
+        else if (key == 27) { // ESC
+            break;
+        }
+    }
 
 }
 
