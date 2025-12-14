@@ -246,52 +246,39 @@ public:
             m_variance += (i - m_mean) * (i - m_mean) * m_ordinaryRelativeHistogram[i];
         }
 
-        // Für jeden t: σ_B²(t) berechnen
+        // Criterion berechnen
         m_criterionMeasures.resize(256, 0.0);
-
-        double bestCriterion = -1.0;
-        int bestT = 0;
+        double maxCriterion = 0.0;
 
         for (int t = 0; t < 255; t++)
         {
-            double w0 = m_cumulativeRelativeHistogram[t];
-            double w1 = 1.0 - w0;
-            if (w0 == 0 || w1 == 0)
+            // Auftrittswahrscheinlichkeiten berechnen
+            double P0 = m_cumulativeRelativeHistogram[t]; //P0(t)
+            if (P0 == 0 || P0 == 1)
                 continue;
 
-            // μ0 berechnen
-            double mu0 = 0.0;
+            // Mittelwerten berechnen
+            double g0 = 0.0;
             for (int i = 0; i <= t; i++)
-                mu0 += i * m_ordinaryRelativeHistogram[i];
-            mu0 /= w0;
+                g0 += i * m_ordinaryRelativeHistogram[i];
+            g0 /= P0;
 
-            // μ1 berechnen
-            double mu1 = 0.0;
-            for (int i = t + 1; i < 256; i++)
-                mu1 += i * m_ordinaryRelativeHistogram[i];
-            mu1 /= w1;
 
-            // Between-Class-Variance
-            double sigmaB2 = w0 * w1 * (mu0 - mu1) * (mu0 - mu1);
-            double criterion = sigmaB2 / m_variance;   // Gütekriterium
-
+            // Zwischen-Klassen-Varianz berechnen
+            double numerator = (m_mean * P0 - g0 * P0) * (m_mean * P0 - g0 * P0);
+            double denominator = P0 * (1 - P0);
+            double sigmaBetween = numerator / denominator; //zaehler/nenner
+            double criterion = sigmaBetween / m_variance;
             m_criterionMeasures[t] = criterion;
 
-            if (criterion > bestCriterion)
+            if (criterion >= maxCriterion)
             {
-                bestCriterion = criterion;
-                bestT = t;
+                maxCriterion = criterion;
+                m_otsuThreshold = t;
             }
         }
-
-        m_otsuThreshold = bestT;
-    }
-
-    int getThreshold() const { return m_otsuThreshold; }
- 
-
+    } 
 };
-
 // >>> Aufgabe 31
 
 
@@ -418,7 +405,7 @@ int main()
     * => die Segmentierung ist entweder unvöllständig oder enthält viel falsch positive Pixel wegen Rauschen
     */
 
-
+    
     cv::waitKey(0);
 
 }
