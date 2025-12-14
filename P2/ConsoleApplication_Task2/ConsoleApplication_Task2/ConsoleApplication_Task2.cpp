@@ -7,6 +7,94 @@
 #include <numeric>
 #include <cmath>
 
+// >>> Aufgabe 31
+class OtsuThresholdProvider {
+private:
+    size_t m_numPixels;
+    std::vector<size_t> m_ordinaryAbsoluteHistogram;
+    std::vector<double> m_ordinaryRelativeHistogram;
+    std::vector<size_t> m_cumulativeAbsoluteHistogram;
+    std::vector<double> m_cumulativeRelativeHistogram;
+    double m_mean;
+    double m_variance;
+    std::vector<double> m_criterionMeasures;
+    int m_otsuThreshold;
+public:
+    OtsuThresholdProvider(const std::vector<size_t>& absoluteHistogram) : m_ordinaryAbsoluteHistogram(absoluteHistogram)
+    {
+        // Pixel Anzahl: m_numPixels
+        m_numPixels = std::accumulate(absoluteHistogram.begin(), absoluteHistogram.end(), 0ull);
+
+        // Relative Histogramme: m_ordinaryRelativeHistogram
+        m_ordinaryRelativeHistogram.resize(256);
+        for (int i = 0; i < 256; i++) {
+            m_ordinaryRelativeHistogram[i] = double(absoluteHistogram[i]) / m_numPixels;
+        }
+
+        // Kumulative Histogramme: m_cumulativeAbsoluteHistogram, m_cumulativeRelativeHistogram
+        m_cumulativeAbsoluteHistogram.resize(256);
+        m_cumulativeRelativeHistogram.resize(256);
+        size_t absSum = 0;
+        double relSum = 0.0;
+        for (int i = 0; i < 256; i++)
+        {
+            absSum += absoluteHistogram[i];
+            relSum += m_ordinaryRelativeHistogram[i];
+            m_cumulativeAbsoluteHistogram[i] = absSum;
+            m_cumulativeRelativeHistogram[i] = relSum;
+        }
+
+        // Gesamt-Mittelwert: m_mean
+        m_mean = 0.0;
+        for (int i = 0; i < 256; i++) {
+            m_mean += i * m_ordinaryRelativeHistogram[i];
+        }
+
+        // Gesamt-Varianz: m_variance
+        m_variance = 0.0;
+        for (int i = 0; i < 256; i++) {
+            m_variance += (i - m_mean) * (i - m_mean) * m_ordinaryRelativeHistogram[i];
+        }
+
+        // Criterion berechnen
+        m_criterionMeasures.resize(256, 0.0);
+        double maxCriterion = 0.0;
+
+        for (int t = 0; t <= 255; t++)
+        {
+            // Auftrittswahrscheinlichkeiten berechnen
+            double P0 = m_cumulativeRelativeHistogram[t]; //P0(t)
+            if (P0 == 0 || P0 == 1)
+                continue;
+
+            // Mittelwerten berechnen
+            double g0 = 0.0;
+            for (int i = 0; i <= t; i++)
+                g0 += i * m_ordinaryRelativeHistogram[i];
+            g0 /= P0;
+
+
+            // Zwischen-Klassen-Varianz berechnen
+            double numerator = (m_mean * P0 - g0 * P0) * (m_mean * P0 - g0 * P0);
+            double denominator = P0 * (1 - P0);
+            double sigmaBetween = numerator / denominator; //zaehler/nenner
+            double criterion = sigmaBetween / m_variance;
+            m_criterionMeasures[t] = criterion;
+
+            if (criterion >= maxCriterion)
+            {
+                maxCriterion = criterion;
+                m_otsuThreshold = t;
+            }
+        }
+    }
+
+    double getCriterion(int i) {
+        return m_criterionMeasures[i];
+    }
+};
+// >>> Aufgabe 31
+
 // >>> Aufgabe 11, 16
 std::string getColorSystem(const cv::Mat& img)
 {
@@ -93,13 +181,22 @@ int g_transparencyR = 70;
 cv::Mat B8_original, G8_original, R8_original;
 cv::Mat B8_display, G8_display, R8_display;
 
+
+// >>> Aufgabe 32
+OtsuThresholdProvider* otsuR = nullptr;
+OtsuThresholdProvider* otsuG = nullptr;
+OtsuThresholdProvider* otsuB = nullptr;
+// >>> Aufgabe 32
+
 void onThresholdBlueTrackbar(int, void*) {
     cv::Mat threshold;
     cv::threshold(B8_original, threshold, g_thresholdB, 255, cv::THRESH_TOZERO);
     double alpha = g_transparencyB / 100.0;
     cv::addWeighted(threshold, alpha, cv::Mat::zeros(threshold.size(), threshold.type()), 1.0 - alpha, 0, B8_display);
     cv::imshow("8-bit B channel", B8_display);
-    std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB << "%\n";
+    double criterionB = otsuB ? otsuB->getCriterion(g_thresholdB) : 0.0;
+    std::cout << "[Blue] Threshold: " << g_thresholdB << ",  Transparency: " << g_transparencyB 
+              << ", Otsu Criterion: " << criterionB << "%\n";
 }
 
 void onTransparencyBlueTrackbar(int, void*) {
@@ -112,7 +209,9 @@ void onThresholdGreenTrackbar(int, void*) {
     double alpha = g_transparencyG / 100.0;
     cv::addWeighted(threshold, alpha, cv::Mat::zeros(threshold.size(), threshold.type()), 1.0 - alpha, 0, G8_display);
     cv::imshow("8-bit G channel", G8_display);
-    std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG << "%\n";
+    double criterionG = otsuG ? otsuG->getCriterion(g_thresholdG) : 0.0;
+    std::cout << "[Green] Threshold: " << g_thresholdG << ",  Transparency: " << g_transparencyG
+              << ", Otsu Criterion: "  << criterionG << "%\n";
 }
 
 void onTransparencyGreenTrackbar(int, void*) {
@@ -125,7 +224,9 @@ void onThresholdRedTrackbar(int, void*) {
     double alpha = g_transparencyR / 100.0;
     cv::addWeighted(threshold, alpha, cv::Mat::zeros(threshold.size(), threshold.type()), 1.0 - alpha, 0, R8_display);
     cv::imshow("8-bit R channel", R8_display);
-    std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR << "%\n";
+    double criterionR = otsuR ? otsuR->getCriterion(g_thresholdR) : 0.0;
+    std::cout << "[Red] Threshold: " << g_thresholdR << ",  Transparency: " << g_transparencyR
+        << ", Otsu Criterion: " << criterionR << "%\n";
 }
 
 void onTransparencyRedTrackbar(int, void*) {
@@ -197,89 +298,7 @@ void updateRedOverlay(int, void*) {
 }
 // <<< Aufgabe 29
 
-// >>> Aufgabe 31
-class OtsuThresholdProvider {
-private:
-    size_t m_numPixels;
-    std::vector<size_t> m_ordinaryAbsoluteHistogram;
-    std::vector<double> m_ordinaryRelativeHistogram;
-    std::vector<size_t> m_cumulativeAbsoluteHistogram;
-    std::vector<double> m_cumulativeRelativeHistogram;
-    double m_mean;
-    double m_variance;
-    std::vector<double> m_criterionMeasures;
-    int m_otsuThreshold;
-public:
-    OtsuThresholdProvider(const std::vector<size_t>& absoluteHistogram) : m_ordinaryAbsoluteHistogram(absoluteHistogram)
-    {
-        // Pixel Anzahl: m_numPixels
-        m_numPixels = std::accumulate(absoluteHistogram.begin(), absoluteHistogram.end(), 0ull);
 
-        // Relative Histogramme: m_ordinaryRelativeHistogram
-        m_ordinaryRelativeHistogram.resize(256);
-        for (int i = 0; i < 256; i++) {
-            m_ordinaryRelativeHistogram[i] = double(absoluteHistogram[i]) / m_numPixels;
-        }
-
-        // Kumulative Histogramme: m_cumulativeAbsoluteHistogram, m_cumulativeRelativeHistogram
-        m_cumulativeAbsoluteHistogram.resize(256);
-        m_cumulativeRelativeHistogram.resize(256);
-        size_t absSum = 0;
-        double relSum = 0.0;
-        for (int i = 0; i < 256; i++)
-        {
-            absSum += absoluteHistogram[i];
-            relSum += m_ordinaryRelativeHistogram[i];
-            m_cumulativeAbsoluteHistogram[i] = absSum;
-            m_cumulativeRelativeHistogram[i] = relSum;
-        }
-
-        // Gesamt-Mittelwert: m_mean
-        m_mean = 0.0;
-        for (int i = 0; i < 256; i++) {
-            m_mean += i * m_ordinaryRelativeHistogram[i];
-        }
-
-        // Gesamt-Varianz: m_variance
-        m_variance = 0.0;
-        for (int i = 0; i < 256; i++) {
-            m_variance += (i - m_mean) * (i - m_mean) * m_ordinaryRelativeHistogram[i];
-        }
-
-        // Criterion berechnen
-        m_criterionMeasures.resize(256, 0.0);
-        double maxCriterion = 0.0;
-
-        for (int t = 0; t < 255; t++)
-        {
-            // Auftrittswahrscheinlichkeiten berechnen
-            double P0 = m_cumulativeRelativeHistogram[t]; //P0(t)
-            if (P0 == 0 || P0 == 1)
-                continue;
-
-            // Mittelwerten berechnen
-            double g0 = 0.0;
-            for (int i = 0; i <= t; i++)
-                g0 += i * m_ordinaryRelativeHistogram[i];
-            g0 /= P0;
-
-
-            // Zwischen-Klassen-Varianz berechnen
-            double numerator = (m_mean * P0 - g0 * P0) * (m_mean * P0 - g0 * P0);
-            double denominator = P0 * (1 - P0);
-            double sigmaBetween = numerator / denominator; //zaehler/nenner
-            double criterion = sigmaBetween / m_variance;
-            m_criterionMeasures[t] = criterion;
-
-            if (criterion >= maxCriterion)
-            {
-                maxCriterion = criterion;
-                m_otsuThreshold = t;
-            }
-        }
-    } 
-};
-// >>> Aufgabe 31
 
 
 
