@@ -2,6 +2,53 @@
 //
 
 #include <iostream>
+#include <opencv2/opencv.hpp>
+
+cv::Mat getTestImageWithConcentricCircles(int sideLength,
+    int minWavelength,
+    int maxWavelength)
+{
+    // Graustufenbild erzeugen
+    cv::Mat testImage(sideLength, sideLength, CV_8UC1);
+
+    // Mittelpunkt des Bildes
+    const double testImageCenterX = (sideLength - 1) / 2.0;
+    const double testImageCenterY = (sideLength - 1) / 2.0;
+
+    const double maxRadius = (sideLength - 1) / 2.0;
+    const double pi = std::acos(-1.0);
+
+    // Über alle Pixel iterieren
+    for (int y = 0; y < sideLength; ++y)
+    {
+        for (int x = 0; x < sideLength; ++x)
+        {
+            const auto dy = testImageCenterY - y;
+            const auto dx = testImageCenterX - x;
+            const auto dr = std::sqrt(dx * dx + dy * dy);
+
+            if (dr > maxRadius)
+            {
+                testImage.at<unsigned char>(y, x) = 0;
+            }
+            else
+            {
+                const auto interpolatedWavelength =
+                    maxWavelength
+                    - (maxWavelength - minWavelength) * dr / maxRadius;
+
+                const auto pixelValue =
+                    static_cast<unsigned char>(
+                        127.5 * (1.0 + std::cos(2.0 * pi * dr / interpolatedWavelength))
+                        );
+
+                testImage.at<unsigned char>(y, x) = pixelValue;
+            }
+        }
+    }
+
+    return testImage;
+}
 
 int main()
 {
