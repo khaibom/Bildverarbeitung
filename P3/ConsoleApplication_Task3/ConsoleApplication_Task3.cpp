@@ -44,9 +44,12 @@ int main()
 
     const int sideLength = g_maxWavelength * 2 + 1;
 
-    cv::Mat testImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
-    cv::imshow("test image", testImage);
+    cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
+    const std::string resultImageWindowTitle = "Result image";
+    cv::namedWindow(resultImageWindowTitle, cv::WINDOW_AUTOSIZE);
+    cv::imshow(resultImageWindowTitle, resultImage);
     cv::waitKey(0);
+
 }
 
 
