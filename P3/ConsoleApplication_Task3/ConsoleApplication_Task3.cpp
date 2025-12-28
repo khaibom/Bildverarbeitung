@@ -38,17 +38,50 @@ cv::Mat getTestImageWithConcentricCircles(int sideLength, int minWavelength, int
 int g_minWavelength = 1;
 int g_maxWavelength = 299;
 
+// >>> Aufgabe 15
+static void onMinWavelengthTrackbar(int pos, void*) {
+    g_minWavelength = pos;
+    if (pos > g_maxWavelength) g_maxWavelength = pos;
+    std::cout << "g_minWavelength = " << g_minWavelength << ", g_maxWavelength = " << g_maxWavelength << std::endl;
+}
+// <<< Aufgabe 15
+
+// >>> Aufgabe 16
+static void onMaxWavelengthTrackbar(int pos, void*) {
+    g_maxWavelength = pos;
+    if (pos < g_minWavelength) g_minWavelength = pos;
+    std::cout << "g_minWavelength = " << g_minWavelength << ", g_maxWavelength = " << g_maxWavelength << std::endl;
+}
+// <<< Aufgabe 16
+
+
 int main()
 {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
-
-    const int sideLength = g_maxWavelength * 2 + 1;
-
-    cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
     const std::string resultImageWindowTitle = "Result image";
     cv::namedWindow(resultImageWindowTitle, cv::WINDOW_AUTOSIZE);
-    cv::imshow(resultImageWindowTitle, resultImage);
-    cv::waitKey(0);
+
+    // >>> Aufgabe 17
+    cv::createTrackbar("min wavelength", resultImageWindowTitle, &g_minWavelength, g_maxWavelength, onMinWavelengthTrackbar);
+    cv::createTrackbar("max wavelength", resultImageWindowTitle, &g_maxWavelength, g_maxWavelength, onMaxWavelengthTrackbar);
+    // <<< Aufgabe 17
+    
+    // >>> Aufgabe 18
+    cv::setTrackbarMin("min wavelength", resultImageWindowTitle, 1);
+    cv::setTrackbarMin("max wavelength", resultImageWindowTitle, 1);
+    // <<< Aufgabe 18
+
+    // >>> Aufgabe 19
+    while (true){
+        const int sideLength = g_maxWavelength * 2 + 1;
+
+        cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
+        cv::imshow(resultImageWindowTitle, resultImage);
+
+        int key = cv::waitKey(30);
+        if (key == 27) break;
+    }
+    // <<< Aufgabe 19
 
 }
 
