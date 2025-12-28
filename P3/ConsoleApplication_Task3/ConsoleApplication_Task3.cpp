@@ -73,7 +73,10 @@ int main()
     cv::setTrackbarMin("max wavelength", resultImageWindowTitle, 1);
     // <<< Aufgabe 18
 
+    // >>> Aufgabe 20
     const std::wstring resultImageWindowTitleW = CA2W(resultImageWindowTitle.c_str()).m_psz;
+    // <<< Aufgabe 20
+
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
         const int sideLength = g_maxWavelength * 2 + 1;
@@ -81,11 +84,32 @@ int main()
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
         cv::imshow(resultImageWindowTitle, resultImage);
 
+        // >>> Aufgabe 23
+        cv::Mat firstProcessedTestImage;
+        cv::blur(resultImage, firstProcessedTestImage, cv::Size(5, 5));
+        cv::imshow("5x5 Box Filter", firstProcessedTestImage);
+        // <<< Aufgabe 23
+
+        // >>> Aufgabe 24
+        cv::Mat secondProcessedTestImage;
+        cv::blur(resultImage, secondProcessedTestImage, cv::Size(9, 9));
+        cv::imshow("9x9 Box Filter", secondProcessedTestImage);
+        // <<< Aufgabe 24
+
         int key = cv::waitKey(30);
         if (key == 27) break;
     }
     // <<< Aufgabe 19, 20, 21
 
+    /*
+    * Aufgabe 25:
+    * 5x5 Box Filter:
+    * - leichter geglättet
+    *  
+    * 9x9 Box Filter: 
+    * - stärker geglättet
+    * - Kontraste werden reduziert
+    */
 }
 
 
