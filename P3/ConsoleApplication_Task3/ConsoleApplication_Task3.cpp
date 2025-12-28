@@ -1,6 +1,8 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <Windows.h>
+#include <AtlBase.h>
 
 
 cv::Mat getTestImageWithConcentricCircles(int sideLength, int minWavelength, int maxWavelength) {
@@ -71,8 +73,9 @@ int main()
     cv::setTrackbarMin("max wavelength", resultImageWindowTitle, 1);
     // <<< Aufgabe 18
 
-    // >>> Aufgabe 19
-    while (true){
+    const std::wstring resultImageWindowTitleW = CA2W(resultImageWindowTitle.c_str()).m_psz;
+    // >>> Aufgabe 19, 20, 21
+    while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
         const int sideLength = g_maxWavelength * 2 + 1;
 
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
@@ -81,7 +84,7 @@ int main()
         int key = cv::waitKey(30);
         if (key == 27) break;
     }
-    // <<< Aufgabe 19
+    // <<< Aufgabe 19, 20, 21
 
 }
 
