@@ -56,6 +56,23 @@ static void onMaxWavelengthTrackbar(int pos, void*) {
 }
 // <<< Aufgabe 16
 
+// >>> Aufgabe 27
+cv::Mat getAxisAlignedMask(int sideLength)
+{
+    cv::Mat mask = cv::Mat::zeros(sideLength, sideLength, CV_8UC1);
+    const int c = sideLength / 2;
+
+    mask(cv::Range(0, c), cv::Range(0, c).setTo(0); // oben links
+    mask(cv::Range(0, c), cv::Range(c+1, sideLength)).setTo(1); // oben rechts
+    mask(cv::Range(c+1, sideLength), cv::Range(0, c)).setTo(2); // unten links
+    mask(cv::Range(c+1, sideLength), cv::Range(c+1, sideLength)).setTo(3); // unten rechts
+
+    mask(cv::Range(0, sideLength), cv::Range(c, c+1)).setTo(5); // vertikale Achse
+    mask(cv::Range(c, c+1), cv::Range(0, sideLength)).setTo(4); // horizontale Achse
+
+    return mask;
+}
+// <<< Aufgabe 27
 
 int main()
 {
@@ -76,6 +93,11 @@ int main()
     // >>> Aufgabe 20
     const std::wstring resultImageWindowTitleW = CA2W(resultImageWindowTitle.c_str()).m_psz;
     // <<< Aufgabe 20
+
+    // >>> Aufgabe 28
+    const int axisMaskSideLength = g_maxWavelength * 2 + 1;
+    cv::Mat axisAlignedMask = getAxisAlignedMask(axisMaskSideLength);
+    // <<< Aufgabe 28
 
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
@@ -104,10 +126,10 @@ int main()
     /*
     * Aufgabe 25:
     * 5x5 Box Filter:
-    * - leichter geglättet
+    * - leichter geglï¿½ttet
     *  
     * 9x9 Box Filter: 
-    * - stärker geglättet
+    * - stï¿½rker geglï¿½ttet
     * - Kontraste werden reduziert
     */
 }
