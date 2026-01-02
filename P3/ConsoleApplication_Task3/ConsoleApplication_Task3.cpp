@@ -169,6 +169,8 @@ int main()
     cv::createTrackbar("rotation angle", resultImageWindowTitle, nullptr, 90, onRotationAngleDegTrackbar);
     // <<< Aufgabe 35
 
+
+
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
         const int sideLength = g_maxWavelength * 2 + 1;
@@ -199,6 +201,47 @@ int main()
         // Aufgabe 38
         cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
         cv::imshow(resultImageWindowTitle, partitionedResultImage);
+
+        // >>> Aufgabe 40
+        cv::Mat gauss5, gauss9;
+        cv::GaussianBlur(resultImage, gauss5, cv::Size(5, 5), 1.0);
+        cv::GaussianBlur(resultImage, gauss9, cv::Size(9, 9), 2.0);
+        cv::imshow("Gaussian 5x5 (sigma=1.0)", gauss5);
+        cv::imshow("Gaussian 9x9 (sigma=2.0)", gauss9);
+        // <<< Aufgabe 40
+
+        // >>> Aufgabe 41
+        cv::Mat sobelX, scharrX;
+        cv::Sobel(resultImage, sobelX, CV_8U, 1, 0, 3);
+        cv::Scharr(resultImage, scharrX, CV_8U, 1, 0);
+        cv::imshow("Sobel 3x3", sobelX);
+        cv::imshow("Scharr", scharrX);
+        // <<< Aufgabe 41
+
+        // >>> Aufgabe 42
+        cv::Mat canny, laplacian;
+        cv::Canny(resultImage, canny, 100, 200);
+        cv::Laplacian(resultImage, laplacian, CV_8U);
+        cv::imshow("Canny Edge Detector", canny);
+        cv::imshow("Laplacian", laplacian);
+        // <<< Aufgabe 42
+
+        // >>> Aufgabe 43
+        cv::Mat median5, median9;
+        cv::medianBlur(resultImage, median5, 5);
+        cv::medianBlur(resultImage, median9, 9);
+        cv::imshow("Median 5x5", median5);
+        cv::imshow("Median 9x9", median9);
+        // <<< Aufgabe 43
+
+        // >>> Aufgabe 44
+        cv::Mat opened, closed;
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
+        cv::morphologyEx(resultImage, opened, cv::MORPH_OPEN, kernel);
+        cv::morphologyEx(resultImage, closed, cv::MORPH_CLOSE, kernel);
+        cv::imshow("Morphological Opening 7x7", opened);
+        cv::imshow("Morphological Closing 7x7", closed);
+        // <<< Aufgabe 44
 
         int key = cv::waitKey(30);
         if (key == 27) break;
