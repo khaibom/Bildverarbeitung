@@ -74,6 +74,44 @@ cv::Mat getAxisAlignedMask(int sideLength)
 }
 // <<< Aufgabe 27
 
+// >>> Aufgabe 29
+cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::Mat secondProcessedTestImage, cv::Mat mask)
+{
+    cv::Mat result = cv::Mat::zeros(testImage.size(), CV_8UC3);
+    // Graubilder nach BGR konvertieren
+    cv::Mat testImageBGR, firstProcessedTestImageBGR, secondProcessedTestImageBGR;
+    cv::cvtColor(testImage, testImageBGR, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(firstProcessedTestImage, firstProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(secondProcessedTestImage, secondProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
+
+    cv::Mat ones = cv::Mat::ones(testBGR.size(), testBGR.type());
+    cv::Mat temp = cv::Mat::zeros(testBGR.size(), testBGR.type());
+
+    // a) mask == 0 -> testImage
+    cv::bitwise_and(testImageBGR, ones, temp, mask == 0);
+    result += temp;
+
+    // b) mask == 1 -> firstProcessedTestImage
+    cv::bitwise_and(firstProcessedTestImageBGR, ones, temp, mask == 1);
+    result += temp;
+
+    // c) mask == 2 -> secondProcessedTestImage
+    cv::bitwise_and(secondProcessedTestImageBGR, ones, temp, mask == 2);
+    result += temp;
+
+    // d) mask == 3 -> gelb
+    result.setTo(cv::Scalar(0, 255, 255), mask == 3);
+
+    // e) mask == 4 -> blau
+    result.setTo(cv::Scalar(255, 0, 0), mask == 4);
+
+    // f) mask == 5 -> weiß
+    result.setTo(cv::Scalar(255, 255, 255), mask == 5);
+
+    return result;
+}
+// <<< Aufgabe 29
+
 int main()
 {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
@@ -118,6 +156,11 @@ int main()
         cv::blur(resultImage, secondProcessedTestImage, cv::Size(9, 9));
         cv::imshow("9x9 Box Filter", secondProcessedTestImage);
         // <<< Aufgabe 24
+
+        // >>> Aufgabe 30, 31
+        cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, axisAlignedMask);
+        cv::imshow(resultImageWindowTitle, partitionedResultImage);
+        // <<< Aufgabe 30, 31
 
         int key = cv::waitKey(30);
         if (key == 27) break;
