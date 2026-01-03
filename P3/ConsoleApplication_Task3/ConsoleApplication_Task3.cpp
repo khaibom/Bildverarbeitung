@@ -113,6 +113,34 @@ cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::M
 }
 // <<< Aufgabe 29
 
+// Aufgabe 33
+int g_rotationAngleDeg = 0;
+
+// >>> Aufgabe 34
+static void onRotationAngleDegTrackbar(int pos, void*){
+    g_rotationAngleDeg = pos;
+    std::cout << "g_rotationAngleDeg = " << g_rotationAngleDeg << std::endl;
+}
+// <<< Aufgabe 34
+
+// >>> Aufgabe 36
+cv::Mat getMask(cv::Mat axisAlignedMask, int rotationAngleDeg){
+    cv::Mat rotatedMask;
+    const cv::Point2f center(axisAlignedMask.cols / 2.0f, axisAlignedMask.rows / 2.0f);
+    cv::Mat rotationMatrix = cv::getRotationMatrix2D(center, rotationAngleDeg, 1.0);
+    cv::warpAffine(
+        axisAlignedMask,
+        rotatedMask,
+        rotationMatrix,
+        axisAlignedMask.size(),
+        cv::INTER_NEAREST,
+        cv::BORDER_CONSTANT,
+        cv::Scalar(0)
+    );
+    return rotatedMask;
+}
+// <<< Aufgabe 36
+
 int main()
 {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
@@ -138,6 +166,10 @@ int main()
     cv::Mat axisAlignedMask = getAxisAlignedMask(axisMaskSideLength);
     // <<< Aufgabe 28
 
+    // >>> Aufgabe 35
+    cv::createTrackbar("rotation angle", resultImageWindowTitle, nullptr, 360, onRotationAngleDegTrackbar);
+    // <<< Aufgabe 35
+
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
         const int sideLength = g_maxWavelength * 2 + 1;
@@ -162,6 +194,14 @@ int main()
         cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, axisAlignedMask);
         cv::imshow(resultImageWindowTitle, partitionedResultImage);
         // <<< Aufgabe 30, 31
+
+        // Aufgabe 37
+        cv::Mat mask = getMask(axisAlignedMask, g_rotationAngleDeg);
+
+        // >>> Aufgabe 38
+        cv::Mat partitionedResultImage38 = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
+        cv::imshow(resultImageWindowTitle, partitionedResultImage38);
+        // <<< Aufgabe 38
 
         int key = cv::waitKey(30);
         if (key == 27) break;
