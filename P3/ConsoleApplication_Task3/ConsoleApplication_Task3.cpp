@@ -62,8 +62,10 @@ cv::Mat getAxisAlignedMask(int sideLength)
     cv::Mat mask = cv::Mat::zeros(sideLength, sideLength, CV_8UC1);
     const int c = sideLength / 2;
 
-    mask(cv::Range(0, c), cv::Range(c + 1, sideLength)).setTo(1); // oben rechts
-    mask(cv::Range(c + 1, sideLength), cv::Range(0, c)).setTo(2); // unten links
+    mask(cv::Range(0, c), cv::Range(0, c)).setTo(0);                  // oben links
+    mask(cv::Range(0, c), cv::Range(c + 1, sideLength)).setTo(1);     // oben rechts
+    mask(cv::Range(c + 1, sideLength), cv::Range(0, c)).setTo(2);     // unten links
+    mask(cv::Range(c + 1, sideLength), cv::Range(c + 1, sideLength)).setTo(0); // unten rechts
 
     mask(cv::Range(0, c), cv::Range(c, c + 1)).setTo(3);
     mask(cv::Range(c + 1, sideLength), cv::Range(c, c + 1)).setTo(4);
