@@ -167,7 +167,7 @@ int main()
     // <<< Aufgabe 28
 
     // >>> Aufgabe 35
-    cv::createTrackbar("rotation angle", resultImageWindowTitle, nullptr, 90, onRotationAngleDegTrackbar);
+    cv::createTrackbar("rotation angle", resultImageWindowTitle, nullptr, 360, onRotationAngleDegTrackbar);
     // <<< Aufgabe 35
 
     // >>> Aufgabe 19, 20, 21
@@ -199,8 +199,8 @@ int main()
         cv::Mat mask = getMask(axisAlignedMask, g_rotationAngleDeg);
 
         // >>> Aufgabe 38
-        cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
-        cv::imshow(resultImageWindowTitle, partitionedResultImage);
+        cv::Mat partitionedResultImage38 = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
+        cv::imshow(resultImageWindowTitle, partitionedResultImage38);
         // <<< Aufgabe 38
 
         int key = cv::waitKey(30);
