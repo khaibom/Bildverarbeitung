@@ -94,9 +94,11 @@ cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::M
     cv::bitwise_and(testImageBGR, ones, temp, mask == 0);
     result += temp;
 
+    temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
     cv::bitwise_and(firstProcessedTestImageBGR, ones, temp, mask == 1);
     result += temp;
 
+    temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
     cv::bitwise_and(secondProcessedTestImageBGR, ones, temp, mask == 2);
     result += temp;
 
@@ -137,6 +139,7 @@ int main()
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
         const int sideLength = g_maxWavelength * 2 + 1;
+        axisAlignedMask = getAxisAlignedMask(sideLength);
 
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
         cv::imshow(resultImageWindowTitle, resultImage);
@@ -144,13 +147,13 @@ int main()
         // >>> Aufgabe 23
         cv::Mat firstProcessedTestImage;
         cv::blur(resultImage, firstProcessedTestImage, cv::Size(5, 5));
-        cv::imshow("5x5 Box Filter", firstProcessedTestImage);
+        //cv::imshow("5x5 Box Filter", firstProcessedTestImage);
         // <<< Aufgabe 23
 
         // >>> Aufgabe 24
         cv::Mat secondProcessedTestImage;
         cv::blur(resultImage, secondProcessedTestImage, cv::Size(9, 9));
-        cv::imshow("9x9 Box Filter", secondProcessedTestImage);
+        //cv::imshow("9x9 Box Filter", secondProcessedTestImage);
         // <<< Aufgabe 24
 
         // >>> Aufgabe 30, 31
