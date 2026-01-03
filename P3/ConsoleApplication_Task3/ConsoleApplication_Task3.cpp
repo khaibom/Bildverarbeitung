@@ -62,13 +62,17 @@ cv::Mat getAxisAlignedMask(int sideLength)
     cv::Mat mask = cv::Mat::zeros(sideLength, sideLength, CV_8UC1);
     const int c = sideLength / 2;
 
-    mask(cv::Range(0, c), cv::Range(0, c).setTo(0); // oben links
-    mask(cv::Range(0, c), cv::Range(c+1, sideLength)).setTo(1); // oben rechts
-    mask(cv::Range(c+1, sideLength), cv::Range(0, c)).setTo(2); // unten links
-    mask(cv::Range(c+1, sideLength), cv::Range(c+1, sideLength)).setTo(3); // unten rechts
+    mask(cv::Range(0, c), cv::Range(c + 1, sideLength)).setTo(1); // oben rechts
+    mask(cv::Range(c + 1, sideLength), cv::Range(0, c)).setTo(2); // unten links
 
-    mask(cv::Range(0, sideLength), cv::Range(c, c+1)).setTo(5); // vertikale Achse
-    mask(cv::Range(c, c+1), cv::Range(0, sideLength)).setTo(4); // horizontale Achse
+    mask(cv::Range(0, c), cv::Range(c, c + 1)).setTo(3);
+    mask(cv::Range(c + 1, sideLength), cv::Range(c, c + 1)).setTo(4);
+
+    mask(cv::Range(c, c + 1), cv::Range(0, c)).setTo(4);
+    mask(cv::Range(c, c + 1), cv::Range(c + 1, sideLength)) .setTo(3);
+
+    // Mittelpunkt
+    mask(cv::Range(c, c + 1), cv::Range(c, c + 1)).setTo(5);
 
     return mask;
 }
@@ -135,7 +139,6 @@ int main()
     // >>> Aufgabe 28
     const int axisMaskSideLength = g_maxWavelength * 2 + 1;
     cv::Mat axisAlignedMask = getAxisAlignedMask(axisMaskSideLength);
-    cv::imshow("axisAlignedMask", axisAlignedMask);
     // <<< Aufgabe 28
 
     // >>> Aufgabe 19, 20, 21
