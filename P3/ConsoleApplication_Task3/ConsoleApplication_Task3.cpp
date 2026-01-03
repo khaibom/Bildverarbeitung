@@ -88,8 +88,8 @@ cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::M
     cv::cvtColor(firstProcessedTestImage, firstProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
     cv::cvtColor(secondProcessedTestImage, secondProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
 
-    cv::Mat ones = cv::Mat::ones(testImageBGR.size(), testBGR.type());
-    cv::Mat temp = cv::Mat::zeros(testImageBGR.size(), testBGR.type());
+    cv::Mat ones = cv::Mat::ones(testImageBGR.size(), testImageBGR.type());
+    cv::Mat temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
 
     cv::bitwise_and(testImageBGR, ones, temp, mask == 0);
     result += temp;
