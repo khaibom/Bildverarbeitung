@@ -113,6 +113,34 @@ cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::M
 }
 // <<< Aufgabe 29
 
+// Aufgabe 33
+int g_rotationAngleDeg = 0;
+
+// >>> Aufgabe 34
+static void onRotationAngleDegTrackbar(int pos, void*){
+    g_rotationAngleDeg = pos;
+    std::cout << "g_rotationAngleDeg = " << g_rotationAngleDeg << std::endl;
+}
+// <<< Aufgabe 34
+
+// >>> Aufgabe 36
+cv::Mat getMask(cv::Mat axisAlignedMask, int rotationAngleDeg){
+    cv::Mat rotatedMask;
+    const cv::Point2f center(axisAlignedMask.cols / 2.0f, axisAlignedMask.rows / 2.0f);
+    cv::Mat rotationMatrix = cv::getRotationMatrix2D(center, rotationAngleDeg, 1.0);
+    cv::warpAffine(
+        axisAlignedMask,
+        rotatedMask,
+        rotationMatrix,
+        axisAlignedMask.size(),
+        cv::INTER_NEAREST,
+        cv::BORDER_CONSTANT,
+        cv::Scalar(0)
+    );
+    return rotatedMask;
+}
+// <<< Aufgabe 36
+
 int main()
 {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
