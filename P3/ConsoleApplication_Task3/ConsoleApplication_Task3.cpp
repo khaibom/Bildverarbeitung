@@ -101,7 +101,6 @@ int main()
     // >>> Aufgabe 28
     const int axisMaskSideLength = g_maxWavelength * 2 + 1;
     cv::Mat axisAlignedMask = getAxisAlignedMask(axisMaskSideLength);
-    cv::imshow("axisAlignedMask", axisAlignedMask);
     // <<< Aufgabe 28
 
     // >>> Aufgabe 19, 20, 21
