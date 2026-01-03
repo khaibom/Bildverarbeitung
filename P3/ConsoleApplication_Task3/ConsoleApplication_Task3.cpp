@@ -91,27 +91,20 @@ cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::M
     cv::Mat ones = cv::Mat::ones(testBGR.size(), testBGR.type());
     cv::Mat temp = cv::Mat::zeros(testBGR.size(), testBGR.type());
 
-    // a) mask == 0 -> testImage
     cv::bitwise_and(testImageBGR, ones, temp, mask == 0);
     result += temp;
 
-    // b) mask == 1 -> firstProcessedTestImage
     cv::bitwise_and(firstProcessedTestImageBGR, ones, temp, mask == 1);
     result += temp;
 
-    // c) mask == 2 -> secondProcessedTestImage
     cv::bitwise_and(secondProcessedTestImageBGR, ones, temp, mask == 2);
     result += temp;
 
-    // d) mask == 3 -> gelb
     result.setTo(cv::Scalar(0, 255, 255), mask == 3);
 
-    // e) mask == 4 -> blau
     result.setTo(cv::Scalar(255, 0, 0), mask == 4);
 
-    // f) mask == 5 -> weiß
     result.setTo(cv::Scalar(255, 255, 255), mask == 5);
-
     return result;
 }
 // <<< Aufgabe 29
