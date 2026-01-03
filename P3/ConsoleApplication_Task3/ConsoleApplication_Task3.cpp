@@ -62,8 +62,10 @@ cv::Mat getAxisAlignedMask(int sideLength)
     cv::Mat mask = cv::Mat::zeros(sideLength, sideLength, CV_8UC1);
     const int c = sideLength / 2;
 
-    mask(cv::Range(0, c), cv::Range(c + 1, sideLength)).setTo(1); // oben rechts
-    mask(cv::Range(c + 1, sideLength), cv::Range(0, c)).setTo(2); // unten links
+    mask(cv::Range(0, c), cv::Range(0, c)).setTo(0);                  // oben links
+    mask(cv::Range(0, c), cv::Range(c + 1, sideLength)).setTo(1);     // oben rechts
+    mask(cv::Range(c + 1, sideLength), cv::Range(0, c)).setTo(2);     // unten links
+    mask(cv::Range(c + 1, sideLength), cv::Range(c + 1, sideLength)).setTo(0); // unten rechts
 
     mask(cv::Range(0, c), cv::Range(c, c + 1)).setTo(3);
     mask(cv::Range(c + 1, sideLength), cv::Range(c, c + 1)).setTo(4);
@@ -77,6 +79,39 @@ cv::Mat getAxisAlignedMask(int sideLength)
     return mask;
 }
 // <<< Aufgabe 27
+
+// >>> Aufgabe 29
+cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::Mat secondProcessedTestImage, cv::Mat mask)
+{
+    cv::Mat result = cv::Mat::zeros(testImage.size(), CV_8UC3);
+    // Graubilder nach BGR konvertieren
+    cv::Mat testImageBGR, firstProcessedTestImageBGR, secondProcessedTestImageBGR;
+    cv::cvtColor(testImage, testImageBGR, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(firstProcessedTestImage, firstProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
+    cv::cvtColor(secondProcessedTestImage, secondProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
+
+    cv::Mat ones = cv::Mat::ones(testImageBGR.size(), testImageBGR.type());
+    cv::Mat temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
+
+    cv::bitwise_and(testImageBGR, testImageBGR, temp, mask == 0);
+    result += temp;
+
+    temp.setTo(0);
+    cv::bitwise_and(firstProcessedTestImageBGR, firstProcessedTestImageBGR, temp, mask == 1);
+    result += temp;
+
+    temp.setTo(0);
+    cv::bitwise_and(secondProcessedTestImageBGR, secondProcessedTestImageBGR, temp, mask == 2);
+    result += temp;
+
+    result.setTo(cv::Scalar(0, 255, 255), mask == 3);
+
+    result.setTo(cv::Scalar(255, 0, 0), mask == 4);
+
+    result.setTo(cv::Scalar(255, 255, 255), mask == 5);
+    return result;
+}
+// <<< Aufgabe 29
 
 int main()
 {
@@ -106,6 +141,7 @@ int main()
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
         const int sideLength = g_maxWavelength * 2 + 1;
+        axisAlignedMask = getAxisAlignedMask(sideLength);
 
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
         cv::imshow(resultImageWindowTitle, resultImage);
@@ -113,14 +149,19 @@ int main()
         // >>> Aufgabe 23
         cv::Mat firstProcessedTestImage;
         cv::blur(resultImage, firstProcessedTestImage, cv::Size(5, 5));
-        cv::imshow("5x5 Box Filter", firstProcessedTestImage);
+        //cv::imshow("5x5 Box Filter", firstProcessedTestImage);
         // <<< Aufgabe 23
 
         // >>> Aufgabe 24
         cv::Mat secondProcessedTestImage;
         cv::blur(resultImage, secondProcessedTestImage, cv::Size(9, 9));
-        cv::imshow("9x9 Box Filter", secondProcessedTestImage);
+        //cv::imshow("9x9 Box Filter", secondProcessedTestImage);
         // <<< Aufgabe 24
+
+        // >>> Aufgabe 30, 31
+        cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, axisAlignedMask);
+        cv::imshow(resultImageWindowTitle, partitionedResultImage);
+        // <<< Aufgabe 30, 31
 
         int key = cv::waitKey(30);
         if (key == 27) break;
