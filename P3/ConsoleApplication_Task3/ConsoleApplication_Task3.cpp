@@ -93,15 +93,15 @@ cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::M
     cv::Mat ones = cv::Mat::ones(testImageBGR.size(), testImageBGR.type());
     cv::Mat temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
 
-    cv::bitwise_and(testImageBGR, ones, temp, mask == 0);
+    cv::bitwise_and(testImageBGR, testImageBGR, temp, mask == 0);
     result += temp;
 
-    temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
-    cv::bitwise_and(firstProcessedTestImageBGR, ones, temp, mask == 1);
+    temp.setTo(0);
+    cv::bitwise_and(firstProcessedTestImageBGR, firstProcessedTestImageBGR, temp, mask == 1);
     result += temp;
 
-    temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
-    cv::bitwise_and(secondProcessedTestImageBGR, ones, temp, mask == 2);
+    temp.setTo(0);
+    cv::bitwise_and(secondProcessedTestImageBGR, secondProcessedTestImageBGR, temp, mask == 2);
     result += temp;
 
     result.setTo(cv::Scalar(0, 255, 255), mask == 3);
