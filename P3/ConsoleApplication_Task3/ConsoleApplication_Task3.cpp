@@ -208,12 +208,14 @@ int main()
         cv::imshow(resultImageWindowTitle, partitionedResultImage);
         // <<< Aufgabe 30, 31
 
-        // Aufgabe 37
+        // >>> Aufgabe 37
         cv::Mat mask = getMask(axisAlignedMask, g_rotationAngleDeg);
+        // <<< Aufgabe 37
 
-        // Aufgabe 38
+        // >>> Aufgabe 38
         cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
         cv::imshow(resultImageWindowTitle, partitionedResultImage);
+        // <<< Aufgabe 38
 
         // >>> Aufgabe 40
         cv::Mat gauss5, gauss9;
