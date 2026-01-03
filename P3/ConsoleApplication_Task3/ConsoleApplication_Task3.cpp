@@ -170,9 +170,10 @@ int main()
         // Aufgabe 37
         cv::Mat mask = getMask(axisAlignedMask, g_rotationAngleDeg);
 
-        // Aufgabe 38
+        // >>> Aufgabe 38
         cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
         cv::imshow(resultImageWindowTitle, partitionedResultImage);
+        // <<< Aufgabe 38
 
         int key = cv::waitKey(30);
         if (key == 27) break;
