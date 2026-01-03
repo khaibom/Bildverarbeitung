@@ -62,13 +62,19 @@ cv::Mat getAxisAlignedMask(int sideLength)
     cv::Mat mask = cv::Mat::zeros(sideLength, sideLength, CV_8UC1);
     const int c = sideLength / 2;
 
-    mask(cv::Range(0, c), cv::Range(0, c).setTo(0); // oben links
-    mask(cv::Range(0, c), cv::Range(c+1, sideLength)).setTo(1); // oben rechts
-    mask(cv::Range(c+1, sideLength), cv::Range(0, c)).setTo(2); // unten links
-    mask(cv::Range(c+1, sideLength), cv::Range(c+1, sideLength)).setTo(3); // unten rechts
+    mask(cv::Range(0, c), cv::Range(0, c)).setTo(0);                  // oben links
+    mask(cv::Range(0, c), cv::Range(c + 1, sideLength)).setTo(1);     // oben rechts
+    mask(cv::Range(c + 1, sideLength), cv::Range(0, c)).setTo(2);     // unten links
+    mask(cv::Range(c + 1, sideLength), cv::Range(c + 1, sideLength)).setTo(0); // unten rechts
 
-    mask(cv::Range(0, sideLength), cv::Range(c, c+1)).setTo(5); // vertikale Achse
-    mask(cv::Range(c, c+1), cv::Range(0, sideLength)).setTo(4); // horizontale Achse
+    mask(cv::Range(0, c), cv::Range(c, c + 1)).setTo(3);
+    mask(cv::Range(c + 1, sideLength), cv::Range(c, c + 1)).setTo(4);
+
+    mask(cv::Range(c, c + 1), cv::Range(0, c)).setTo(4);
+    mask(cv::Range(c, c + 1), cv::Range(c + 1, sideLength)) .setTo(3);
+
+    // Mittelpunkt
+    mask(cv::Range(c, c + 1), cv::Range(c, c + 1)).setTo(5);
 
     return mask;
 }
@@ -84,30 +90,25 @@ cv::Mat getResultImage(cv::Mat testImage, cv::Mat firstProcessedTestImage, cv::M
     cv::cvtColor(firstProcessedTestImage, firstProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
     cv::cvtColor(secondProcessedTestImage, secondProcessedTestImageBGR, cv::COLOR_GRAY2BGR);
 
-    cv::Mat ones = cv::Mat::ones(testBGR.size(), testBGR.type());
-    cv::Mat temp = cv::Mat::zeros(testBGR.size(), testBGR.type());
+    cv::Mat ones = cv::Mat::ones(testImageBGR.size(), testImageBGR.type());
+    cv::Mat temp = cv::Mat::zeros(testImageBGR.size(), testImageBGR.type());
 
-    // a) mask == 0 -> testImage
-    cv::bitwise_and(testImageBGR, ones, temp, mask == 0);
+    cv::bitwise_and(testImageBGR, testImageBGR, temp, mask == 0);
     result += temp;
 
-    // b) mask == 1 -> firstProcessedTestImage
-    cv::bitwise_and(firstProcessedTestImageBGR, ones, temp, mask == 1);
+    temp.setTo(0);
+    cv::bitwise_and(firstProcessedTestImageBGR, firstProcessedTestImageBGR, temp, mask == 1);
     result += temp;
 
-    // c) mask == 2 -> secondProcessedTestImage
-    cv::bitwise_and(secondProcessedTestImageBGR, ones, temp, mask == 2);
+    temp.setTo(0);
+    cv::bitwise_and(secondProcessedTestImageBGR, secondProcessedTestImageBGR, temp, mask == 2);
     result += temp;
 
-    // d) mask == 3 -> gelb
     result.setTo(cv::Scalar(0, 255, 255), mask == 3);
 
-    // e) mask == 4 -> blau
     result.setTo(cv::Scalar(255, 0, 0), mask == 4);
 
-    // f) mask == 5 -> weiß
     result.setTo(cv::Scalar(255, 255, 255), mask == 5);
-
     return result;
 }
 // <<< Aufgabe 29
@@ -137,7 +138,8 @@ cv::Mat getMask(cv::Mat axisAlignedMask, int rotationAngleDeg){
         cv::Scalar(0)
     );
     return rotatedMask;
-}// <<< Aufgabe 36
+}
+// <<< Aufgabe 36
 
 int main()
 {
@@ -162,18 +164,16 @@ int main()
     // >>> Aufgabe 28
     const int axisMaskSideLength = g_maxWavelength * 2 + 1;
     cv::Mat axisAlignedMask = getAxisAlignedMask(axisMaskSideLength);
-    cv::imshow("axisAlignedMask", axisAlignedMask);
     // <<< Aufgabe 28
 
     // >>> Aufgabe 35
-    cv::createTrackbar("rotation angle", resultImageWindowTitle, nullptr, 90, onRotationAngleDegTrackbar);
+    cv::createTrackbar("rotation angle", resultImageWindowTitle, nullptr, 360, onRotationAngleDegTrackbar);
     // <<< Aufgabe 35
-
-
 
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
         const int sideLength = g_maxWavelength * 2 + 1;
+        axisAlignedMask = getAxisAlignedMask(sideLength);
 
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
         cv::imshow(resultImageWindowTitle, resultImage);
@@ -181,14 +181,27 @@ int main()
         // >>> Aufgabe 23
         cv::Mat firstProcessedTestImage;
         cv::blur(resultImage, firstProcessedTestImage, cv::Size(5, 5));
-        cv::imshow("5x5 Box Filter", firstProcessedTestImage);
+        //cv::imshow("5x5 Box Filter", firstProcessedTestImage);
         // <<< Aufgabe 23
 
         // >>> Aufgabe 24
         cv::Mat secondProcessedTestImage;
         cv::blur(resultImage, secondProcessedTestImage, cv::Size(9, 9));
-        cv::imshow("9x9 Box Filter", secondProcessedTestImage);
+        //cv::imshow("9x9 Box Filter", secondProcessedTestImage);
         // <<< Aufgabe 24
+
+        // >>> Aufgabe 30, 31
+        cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, axisAlignedMask);
+        cv::imshow(resultImageWindowTitle, partitionedResultImage);
+        // <<< Aufgabe 30, 31
+
+        // Aufgabe 37
+        cv::Mat mask = getMask(axisAlignedMask, g_rotationAngleDeg);
+
+        // >>> Aufgabe 38
+        cv::Mat partitionedResultImage38 = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
+        cv::imshow(resultImageWindowTitle, partitionedResultImage38);
+        // <<< Aufgabe 38
 
         // >>> Aufgabe 30, 31
         cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, axisAlignedMask);
