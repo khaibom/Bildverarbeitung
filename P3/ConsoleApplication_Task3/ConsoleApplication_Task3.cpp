@@ -190,6 +190,11 @@ int main()
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
         // >>> Aufgabe 45
         resultImage = addGaussianNoise(resultImage, 0.0, 20.0);
+        /*
+        * Der Box-Filter ist ein linearer Mittelwertfilter, der sowohl Rauschen
+        * als auch Kanten glättet. Der Medianfilter ist ein nichtlinearer Filter,
+        * der besonders effektiv bei impulsivem Rauschen ist und Kanten besser erhält.
+        */
         // <<< Aufgabe 45
         cv::imshow(resultImageWindowTitle, resultImage);
 
