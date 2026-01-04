@@ -141,6 +141,18 @@ cv::Mat getMask(cv::Mat axisAlignedMask, int rotationAngleDeg){
 }
 // <<< Aufgabe 36
 
+// >>> Aufgabe 45
+cv::Mat addGaussianNoise(const cv::Mat& src, double mean, double stddev)
+{
+    cv::Mat noise(src.size(), src.type());
+    cv::randn(noise, mean, stddev);   // Gaussian noise
+
+    cv::Mat noisy;
+    cv::add(src, noise, noisy, cv::noArray(), src.type());
+    return noisy;
+}
+// <<< Aufgabe 45
+
 int main()
 {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
@@ -176,6 +188,9 @@ int main()
         axisAlignedMask = getAxisAlignedMask(sideLength);
 
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
+        // >>> Aufgabe 45
+        resultImage = addGaussianNoise(resultImage, 0.0, 20.0);
+        // <<< Aufgabe 45
         cv::imshow(resultImageWindowTitle, resultImage);
 
         // >>> Aufgabe 23
