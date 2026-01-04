@@ -195,34 +195,21 @@ int main()
         cv::imshow(resultImageWindowTitle, partitionedResultImage);
         // <<< Aufgabe 30, 31
 
-        // Aufgabe 37
+        // >>> Aufgabe 37
         cv::Mat mask = getMask(axisAlignedMask, g_rotationAngleDeg);
+        // <<< Aufgabe 37
 
         // >>> Aufgabe 38
         cv::Mat partitionedResultImage38 = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
         cv::imshow(resultImageWindowTitle, partitionedResultImage38);
         // <<< Aufgabe 38
 
-        // >>> Aufgabe 30, 31
-        cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, axisAlignedMask);
-        cv::imshow(resultImageWindowTitle, partitionedResultImage);
-        // <<< Aufgabe 30, 31
-
-        // >>> Aufgabe 37
-        cv::Mat mask = getMask(axisAlignedMask, g_rotationAngleDeg);
-        // <<< Aufgabe 37
-
-        // >>> Aufgabe 38
-        cv::Mat partitionedResultImage = getResultImage(resultImage, firstProcessedTestImage, secondProcessedTestImage, mask);
-        cv::imshow(resultImageWindowTitle, partitionedResultImage);
-        // <<< Aufgabe 38
-
         // >>> Aufgabe 40
         cv::Mat gauss5, gauss9;
-        cv::GaussianBlur(resultImage, gauss5, cv::Size(5, 5), 1.0);
-        cv::GaussianBlur(resultImage, gauss9, cv::Size(9, 9), 2.0);
-        cv::imshow("Gaussian 5x5 (sigma=1.0)", gauss5);
-        cv::imshow("Gaussian 9x9 (sigma=2.0)", gauss9);
+        cv::GaussianBlur(resultImage, gauss5, cv::Size(5, 5), 0.5, 0.5);
+        cv::GaussianBlur(resultImage, gauss9, cv::Size(9, 9), 2.0, 2.0);
+        //cv::imshow("Gaussian 5x5 (sigma=0.5)", gauss5);
+        //cv::imshow("Gaussian 9x9 (sigma=2.0)", gauss9);
         // <<< Aufgabe 40
 
         // >>> Aufgabe 41
