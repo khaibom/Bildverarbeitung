@@ -222,10 +222,10 @@ int main()
 
         // >>> Aufgabe 42
         cv::Mat canny, laplacian;
-        cv::Canny(resultImage, canny, 100, 200);
+        cv::Canny(resultImage, canny, 50, 150);
         cv::Laplacian(resultImage, laplacian, CV_8U);
-        cv::imshow("Canny Edge Detector", canny);
-        cv::imshow("Laplacian", laplacian);
+        //cv::imshow("Canny", canny);
+        //cv::imshow("Laplacian", laplacian);
         // <<< Aufgabe 42
 
         // >>> Aufgabe 43
