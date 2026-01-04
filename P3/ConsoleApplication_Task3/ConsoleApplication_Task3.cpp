@@ -232,8 +232,8 @@ int main()
         cv::Mat median5, median9;
         cv::medianBlur(resultImage, median5, 5);
         cv::medianBlur(resultImage, median9, 9);
-        cv::imshow("Median 5x5", median5);
-        cv::imshow("Median 9x9", median9);
+        //cv::imshow("Median 5x5", median5);
+        //cv::imshow("Median 9x9", median9);
         // <<< Aufgabe 43
 
         // >>> Aufgabe 44
