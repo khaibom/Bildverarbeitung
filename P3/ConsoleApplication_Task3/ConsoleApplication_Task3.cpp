@@ -214,10 +214,10 @@ int main()
 
         // >>> Aufgabe 41
         cv::Mat sobelX, scharrX;
-        cv::Sobel(resultImage, sobelX, CV_8U, 1, 0, 3);
-        cv::Scharr(resultImage, scharrX, CV_8U, 1, 0);
-        cv::imshow("Sobel 3x3", sobelX);
-        cv::imshow("Scharr", scharrX);
+        cv::Sobel(resultImage, sobelX, CV_8U, 1, 0, 3); //vertikal
+        cv::Scharr(resultImage, scharrX, CV_8U, 0, 1, 3); //horizontal
+        //cv::imshow("Sobel 3x3 (vertikal)", sobelX);
+        //cv::imshow("Scharr (horizontal)", scharrX);
         // <<< Aufgabe 41
 
         // >>> Aufgabe 42
