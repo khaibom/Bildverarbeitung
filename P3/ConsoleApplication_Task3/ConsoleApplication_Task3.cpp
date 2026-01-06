@@ -42,16 +42,22 @@ int g_maxWavelength = 299;
 
 // >>> Aufgabe 15
 static void onMinWavelengthTrackbar(int pos, void*) {
+    if (pos > g_maxWavelength) {
+        g_maxWavelength = pos;
+        cv::setTrackbarPos("max wavelength", "Result image", g_maxWavelength);
+    }
     g_minWavelength = pos;
-    if (pos > g_maxWavelength) g_maxWavelength = pos;
     std::cout << "g_minWavelength = " << g_minWavelength << ", g_maxWavelength = " << g_maxWavelength << std::endl;
 }
 // <<< Aufgabe 15
 
 // >>> Aufgabe 16
 static void onMaxWavelengthTrackbar(int pos, void*) {
+    if (pos < g_minWavelength) {
+        g_minWavelength = pos;
+        cv::setTrackbarPos("min wavelength", "Result image", g_minWavelength);
+    }
     g_maxWavelength = pos;
-    if (pos < g_minWavelength) g_minWavelength = pos;
     std::cout << "g_minWavelength = " << g_minWavelength << ", g_maxWavelength = " << g_maxWavelength << std::endl;
 }
 // <<< Aufgabe 16
