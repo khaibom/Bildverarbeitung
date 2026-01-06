@@ -188,9 +188,10 @@ int main()
     cv::createTrackbar("rotation angle", resultImageWindowTitle, nullptr, 360, onRotationAngleDegTrackbar);
     // <<< Aufgabe 35
 
+    const int sideLength = g_maxWavelength * 2 + 1;
+
     // >>> Aufgabe 19, 20, 21
     while (FindWindow(NULL, resultImageWindowTitleW.c_str())){
-        const int sideLength = g_maxWavelength * 2 + 1;
         axisAlignedMask = getAxisAlignedMask(sideLength);
 
         cv::Mat resultImage = getTestImageWithConcentricCircles(sideLength, g_minWavelength, g_maxWavelength);
@@ -267,8 +268,8 @@ int main()
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
         cv::morphologyEx(resultImage, opened, cv::MORPH_OPEN, kernel);
         cv::morphologyEx(resultImage, closed, cv::MORPH_CLOSE, kernel);
-        cv::imshow("Morphological Opening 7x7", opened);
-        cv::imshow("Morphological Closing 7x7", closed);
+        //cv::imshow("Morphological Opening 7x7", opened);
+        //cv::imshow("Morphological Closing 7x7", closed);
         // <<< Aufgabe 44
 
         int key = cv::waitKey(30);
