@@ -166,8 +166,8 @@ int main()
     cv::namedWindow(resultImageWindowTitle, cv::WINDOW_AUTOSIZE);
 
     // >>> Aufgabe 17
-    cv::createTrackbar("min wavelength", resultImageWindowTitle, &g_minWavelength, g_maxWavelength, onMinWavelengthTrackbar);
-    cv::createTrackbar("max wavelength", resultImageWindowTitle, &g_maxWavelength, g_maxWavelength, onMaxWavelengthTrackbar);
+    cv::createTrackbar("min wavelength", resultImageWindowTitle, nullptr, g_maxWavelength, onMinWavelengthTrackbar);
+    cv::createTrackbar("max wavelength", resultImageWindowTitle, nullptr, g_maxWavelength, onMaxWavelengthTrackbar);
     // <<< Aufgabe 17
     
     // >>> Aufgabe 18
