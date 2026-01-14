@@ -150,11 +150,18 @@ cv::Mat getMask(cv::Mat axisAlignedMask, int rotationAngleDeg){
 // >>> Aufgabe 45
 cv::Mat addGaussianNoise(const cv::Mat& src, double mean, double stddev)
 {
-    cv::Mat noise(src.size(), src.type());
-    cv::randn(noise, mean, stddev);   // Gaussian noise
+    // Rauschen in 16-bit signed Format generieren, um negative Werte zu erhalten (mean=0)
+    cv::Mat noise(src.size(), CV_16SC1);
+    cv::randn(noise, mean, stddev);   // Gaussian noise (mittelwertfrei)
 
+    // Bild zu 16-bit signed konvertieren, Rauschen addieren
+    cv::Mat src16s;
+    src.convertTo(src16s, CV_16SC1);
+    cv::Mat noisy16s = src16s + noise;
+
+    // Zurück zu 8-bit mit Clipping (saturate_cast)
     cv::Mat noisy;
-    cv::add(src, noise, noisy, cv::noArray(), src.type());
+    noisy16s.convertTo(noisy, CV_8UC1);
     return noisy;
 }
 // <<< Aufgabe 45
@@ -231,45 +238,79 @@ int main()
         cv::imshow(resultImageWindowTitle, partitionedResultImage38);
         // <<< Aufgabe 38
 
-        // >>> Aufgabe 40
+        // >>> Aufgabe 40: Gauss-Filter Vergleich (analog zum Box-Filter)
         cv::Mat gauss5, gauss9;
         cv::GaussianBlur(resultImage, gauss5, cv::Size(5, 5), 0.5, 0.5);
         cv::GaussianBlur(resultImage, gauss9, cv::Size(9, 9), 2.0, 2.0);
-        //cv::imshow("Gaussian 5x5 (sigma=0.5)", gauss5);
-        //cv::imshow("Gaussian 9x9 (sigma=2.0)", gauss9);
+        // Partitionierte Visualisierung: Original vs Gauss5 vs Gauss9
+        cv::Mat gaussCompare = getResultImage(resultImage, gauss5, gauss9, mask);
+        cv::imshow("Gaussian Filter Vergleich", gaussCompare);
         // <<< Aufgabe 40
 
-        // >>> Aufgabe 41
-        cv::Mat sobelX, scharrX;
-        cv::Sobel(resultImage, sobelX, CV_8U, 1, 0, 3); //vertikal
-        cv::Scharr(resultImage, scharrX, CV_8U, 0, 1, 3); //horizontal
-        //cv::imshow("Sobel 3x3 (vertikal)", sobelX);
-        //cv::imshow("Scharr (horizontal)", scharrX);
+        // >>> Aufgabe 41: Sobel und Scharr - Gradientenbetrag berechnen
+        // Sobel: Gradienten in X und Y Richtung mit 16-bit signed (negative Werte möglich)
+        cv::Mat sobelX, sobelY;
+        cv::Sobel(resultImage, sobelX, CV_16S, 1, 0, 3);  // Gradient in X-Richtung
+        cv::Sobel(resultImage, sobelY, CV_16S, 0, 1, 3);  // Gradient in Y-Richtung
+        // Gradientenbetrag: sqrt(Gx² + Gy²)
+        cv::Mat sobelAbsX, sobelAbsY, sobelMagnitude;
+        cv::convertScaleAbs(sobelX, sobelAbsX);
+        cv::convertScaleAbs(sobelY, sobelAbsY);
+        cv::addWeighted(sobelAbsX, 0.5, sobelAbsY, 0.5, 0, sobelMagnitude);
+        // Normalisierung für bessere Visualisierung
+        cv::normalize(sobelMagnitude, sobelMagnitude, 0, 255, cv::NORM_MINMAX, CV_8U);
+
+        // Scharr: Genauerer 3x3 Gradientenoperator
+        cv::Mat scharrX, scharrY;
+        cv::Scharr(resultImage, scharrX, CV_16S, 1, 0);  // Gradient in X-Richtung
+        cv::Scharr(resultImage, scharrY, CV_16S, 0, 1);  // Gradient in Y-Richtung
+        cv::Mat scharrAbsX, scharrAbsY, scharrMagnitude;
+        cv::convertScaleAbs(scharrX, scharrAbsX);
+        cv::convertScaleAbs(scharrY, scharrAbsY);
+        cv::addWeighted(scharrAbsX, 0.5, scharrAbsY, 0.5, 0, scharrMagnitude);
+        cv::normalize(scharrMagnitude, scharrMagnitude, 0, 255, cv::NORM_MINMAX, CV_8U);
+
+        // Partitionierte Visualisierung: Original vs Sobel vs Scharr
+        cv::Mat gradientCompare = getResultImage(resultImage, sobelMagnitude, scharrMagnitude, mask);
+        cv::imshow("Sobel vs Scharr Vergleich", gradientCompare);
         // <<< Aufgabe 41
 
-        // >>> Aufgabe 42
-        cv::Mat canny, laplacian;
-        cv::Canny(resultImage, canny, 50, 150);
-        cv::Laplacian(resultImage, laplacian, CV_8U);
-        //cv::imshow("Canny", canny);
-        //cv::imshow("Laplacian", laplacian);
+        // >>> Aufgabe 42: Canny und Laplacian mit Vorglättung
+        // Vorglättung mit Gaussian-Filter (wie im Tutorial empfohlen)
+        cv::Mat blurredForEdge;
+        cv::GaussianBlur(resultImage, blurredForEdge, cv::Size(5, 5), 1.4, 1.4);
+
+        cv::Mat canny;
+        cv::Canny(blurredForEdge, canny, 50, 150);
+
+        // Laplacian mit 16-bit signed Format (negative Werte möglich)
+        cv::Mat laplacian16s, laplacian;
+        cv::Laplacian(blurredForEdge, laplacian16s, CV_16S, 3);
+        cv::convertScaleAbs(laplacian16s, laplacian);
+        cv::normalize(laplacian, laplacian, 0, 255, cv::NORM_MINMAX, CV_8U);
+
+        // Partitionierte Visualisierung: Original vs Canny vs Laplacian
+        cv::Mat edgeCompare = getResultImage(resultImage, canny, laplacian, mask);
+        cv::imshow("Canny vs Laplacian Vergleich", edgeCompare);
         // <<< Aufgabe 42
 
-        // >>> Aufgabe 43
+        // >>> Aufgabe 43: Median-Filter Vergleich
         cv::Mat median5, median9;
         cv::medianBlur(resultImage, median5, 5);
         cv::medianBlur(resultImage, median9, 9);
-        //cv::imshow("Median 5x5", median5);
-        //cv::imshow("Median 9x9", median9);
+        // Partitionierte Visualisierung: Original vs Median5 vs Median9
+        cv::Mat medianCompare = getResultImage(resultImage, median5, median9, mask);
+        cv::imshow("Median Filter Vergleich", medianCompare);
         // <<< Aufgabe 43
 
-        // >>> Aufgabe 44
+        // >>> Aufgabe 44: Morphologische Operationen Vergleich
         cv::Mat opened, closed;
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
         cv::morphologyEx(resultImage, opened, cv::MORPH_OPEN, kernel);
         cv::morphologyEx(resultImage, closed, cv::MORPH_CLOSE, kernel);
-        //cv::imshow("Morphological Opening 7x7", opened);
-        //cv::imshow("Morphological Closing 7x7", closed);
+        // Partitionierte Visualisierung: Original vs Opening vs Closing
+        cv::Mat morphCompare = getResultImage(resultImage, opened, closed, mask);
+        cv::imshow("Morphological Vergleich", morphCompare);
         // <<< Aufgabe 44
 
         int key = cv::waitKey(30);
@@ -280,11 +321,28 @@ int main()
     /*
     * Aufgabe 25:
     * 5x5 Box Filter:
-    * - leichter gegl�ttet
+    * - leichter geglättet
     *  
     * 9x9 Box Filter: 
-    * - st�rker gegl�ttet
+    * - stärker geglättet
     * - Kontraste werden reduziert
+    * 
+    * Aufgabe 41 Hinweise zu Sobel/Scharr:
+    * - Sobel und Scharr sind Gradientenoperatoren zur Kantenerkennung
+    * - Gradienten können negativ sein -> CV_16S (signed 16-bit) verwenden
+    * - Der Gradientenbetrag wird als sqrt(Gx² + Gy²) berechnet
+    * - Normalisierung mit cv::normalize() verbessert die Visualisierung
+    * - Scharr ist genauer als Sobel bei 3x3 Kernels
+    * 
+    * Aufgabe 42 Hinweise zu Laplacian:
+    * - Laplacian ist ein 2. Ableitungsoperator (kann negative Werte liefern)
+    * - Muss mit signed Format (CV_16S) verwendet werden
+    * - Vorglättung (z.B. Gaussian) reduziert Rauschempfindlichkeit
+    * 
+    * Aufgabe 45 Hinweise zu Gaussian Noise:
+    * - Für mittelwertfreies Rauschen (mean=0) muss ein signed Format 
+    *   verwendet werden, da CV_8U keine negativen Werte darstellen kann
+    * - Clipping (saturate_cast) beim Konvertieren zurück zu CV_8U
     */
 }
 
