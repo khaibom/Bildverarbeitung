@@ -150,11 +150,15 @@ cv::Mat getMask(cv::Mat axisAlignedMask, int rotationAngleDeg){
 // >>> Aufgabe 45
 cv::Mat addGaussianNoise(const cv::Mat& src, double mean, double stddev)
 {
-    cv::Mat noise(src.size(), src.type());
-    cv::randn(noise, mean, stddev);   // Gaussian noise
+    cv::Mat noise(src.size(), CV_16SC1);
+    cv::randn(noise, mean, stddev);   // Gaussian noise (mittelwertfrei)
+
+    cv::Mat src16s;
+    src.convertTo(src16s, CV_16SC1);
+    cv::Mat noisy16s = src16s + noise;
 
     cv::Mat noisy;
-    cv::add(src, noise, noisy, cv::noArray(), src.type());
+    noisy16s.convertTo(noisy, CV_8UC1);
     return noisy;
 }
 // <<< Aufgabe 45
@@ -231,45 +235,76 @@ int main()
         cv::imshow(resultImageWindowTitle, partitionedResultImage38);
         // <<< Aufgabe 38
 
-        // >>> Aufgabe 40
+        // >>> Aufgabe 40: Gauss-Filter Vergleich (analog zum Box-Filter)
         cv::Mat gauss5, gauss9;
         cv::GaussianBlur(resultImage, gauss5, cv::Size(5, 5), 0.5, 0.5);
         cv::GaussianBlur(resultImage, gauss9, cv::Size(9, 9), 2.0, 2.0);
-        //cv::imshow("Gaussian 5x5 (sigma=0.5)", gauss5);
-        //cv::imshow("Gaussian 9x9 (sigma=2.0)", gauss9);
+        // Partitionierte Visualisierung: Original vs Gauss5 vs Gauss9
+        cv::Mat gaussCompare = getResultImage(resultImage, gauss5, gauss9, mask);
+        cv::imshow("Gaussian Filter Vergleich", gaussCompare);
         // <<< Aufgabe 40
 
-        // >>> Aufgabe 41
-        cv::Mat sobelX, scharrX;
-        cv::Sobel(resultImage, sobelX, CV_8U, 1, 0, 3); //vertikal
-        cv::Scharr(resultImage, scharrX, CV_8U, 0, 1, 3); //horizontal
-        //cv::imshow("Sobel 3x3 (vertikal)", sobelX);
-        //cv::imshow("Scharr (horizontal)", scharrX);
+        // >>> Aufgabe 41: Sobel und Scharr - Gradientenbetrag berechnen
+        // Sobel: Gradienten in X und Y Richtung (negative Werte möglich)
+        cv::Mat sobelX, sobelY, gradientSobel;
+        cv::Sobel(resultImage, sobelX, CV_64F, 1, 0, 3);  
+        cv::Sobel(resultImage, sobelY, CV_64F, 0, 1, 3);  
+		cv::magnitude(sobelX, sobelY, gradientSobel); 
+		cv::normalize(gradientSobel, gradientSobel, 0, 255, cv::NORM_MINMAX);
+		cv::Mat gradientSobelAbs;
+		gradientSobel.convertTo(gradientSobelAbs, CV_8U);
+        cv::convertScaleAbs(gradientSobel, gradientSobelAbs);
+      
+
+        // Scharr: Genauerer 3x3 Gradientenoperator
+        cv::Mat scharrX, scharrY, gradientScharr;
+        cv::Scharr(resultImage, scharrX, CV_64F, 1, 0);
+        cv::Scharr(resultImage, scharrY, CV_64F, 0, 1);
+        cv::magnitude(scharrX, scharrY, gradientScharr);
+		cv::normalize(gradientScharr, gradientScharr, 0, 255, cv::NORM_MINMAX);
+        cv::Mat gradientScharrAbs;
+		gradientScharr.convertTo(gradientScharrAbs, CV_8U);
+        cv::convertScaleAbs(gradientScharr, gradientScharrAbs);
+
+        // Partitionierte Visualisierung: Original vs Sobel vs Scharr
+        cv::Mat gradientCompare = getResultImage(resultImage, gradientSobelAbs, gradientScharrAbs, mask);
+        cv::imshow("Sobel vs Scharr Vergleich", gradientCompare);
         // <<< Aufgabe 41
 
-        // >>> Aufgabe 42
-        cv::Mat canny, laplacian;
-        cv::Canny(resultImage, canny, 50, 150);
-        cv::Laplacian(resultImage, laplacian, CV_8U);
-        //cv::imshow("Canny", canny);
-        //cv::imshow("Laplacian", laplacian);
+        // >>> Aufgabe 42: Canny und Laplacian mit Vorglättung
+        // Gaussian-Filter
+        cv::Mat blurred;
+        cv::GaussianBlur(resultImage, blurred, cv::Size(5, 5), 1.4);
+		// Canny Edge Detector
+        cv::Mat canny;
+        cv::Canny(blurred, canny, 100, 200);
+		// Laplacian mit Kanten Detektion
+        cv::Mat laplacian, laplacianAbs;
+        cv::Laplacian(blurred, laplacian, CV_64F);
+        cv::convertScaleAbs(laplacian, laplacianAbs);
+       
+        // Partitionierte Visualisierung: Original vs Canny vs Laplacian
+        cv::Mat edgeCompare = getResultImage(resultImage, canny, laplacianAbs, mask);
+        cv::imshow("Canny vs Laplacian Vergleich", edgeCompare);
         // <<< Aufgabe 42
 
-        // >>> Aufgabe 43
+        // >>> Aufgabe 43: Median-Filter Vergleich
         cv::Mat median5, median9;
         cv::medianBlur(resultImage, median5, 5);
         cv::medianBlur(resultImage, median9, 9);
-        //cv::imshow("Median 5x5", median5);
-        //cv::imshow("Median 9x9", median9);
+        // Partitionierte Visualisierung: Original vs Median5 vs Median9
+        cv::Mat medianCompare = getResultImage(resultImage, median5, median9, mask);
+        cv::imshow("Median Filter Vergleich", medianCompare);
         // <<< Aufgabe 43
 
-        // >>> Aufgabe 44
+        // >>> Aufgabe 44: Morphologische Operationen Vergleich
         cv::Mat opened, closed;
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(7, 7));
         cv::morphologyEx(resultImage, opened, cv::MORPH_OPEN, kernel);
         cv::morphologyEx(resultImage, closed, cv::MORPH_CLOSE, kernel);
-        //cv::imshow("Morphological Opening 7x7", opened);
-        //cv::imshow("Morphological Closing 7x7", closed);
+        // Partitionierte Visualisierung: Original vs Opening vs Closing
+        cv::Mat morphCompare = getResultImage(resultImage, opened, closed, mask);
+        cv::imshow("Morphological Vergleich", morphCompare);
         // <<< Aufgabe 44
 
         int key = cv::waitKey(30);
@@ -280,10 +315,10 @@ int main()
     /*
     * Aufgabe 25:
     * 5x5 Box Filter:
-    * - leichter gegl�ttet
+    * - leichter geglättet
     *  
     * 9x9 Box Filter: 
-    * - st�rker gegl�ttet
+    * - stärker geglättet
     * - Kontraste werden reduziert
     */
 }
