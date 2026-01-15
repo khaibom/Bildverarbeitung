@@ -282,9 +282,9 @@ int main()
         cv::Mat canny;
         cv::Canny(blurred, canny, 100, 200);
 		// Laplacian mit Kanten Detektion
-        cv::Mat laplacian64, laplacianAbs;
-        cv::Laplacian(blurred, canny, CV_64F);
-        cv::convertScaleAbs(laplacian64, laplacianAbs);
+        cv::Mat laplacian, laplacianAbs;
+        cv::Laplacian(blurred, laplacian, CV_64F);
+        cv::convertScaleAbs(laplacian, laplacianAbs);
        
         // Partitionierte Visualisierung: Original vs Canny vs Laplacian
         cv::Mat edgeCompare = getResultImage(resultImage, canny, laplacianAbs, mask);
