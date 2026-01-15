@@ -153,7 +153,6 @@ cv::Mat addGaussianNoise(const cv::Mat& src, double mean, double stddev)
     cv::Mat noise(src.size(), CV_16SC1);
     cv::randn(noise, mean, stddev);   // Gaussian noise (mittelwertfrei)
 
-    // Bild zu 16-bit signed konvertieren, Rauschen addieren
     cv::Mat src16s;
     src.convertTo(src16s, CV_16SC1);
     cv::Mat noisy16s = src16s + noise;
@@ -321,23 +320,6 @@ int main()
     * 9x9 Box Filter: 
     * - stärker geglättet
     * - Kontraste werden reduziert
-    * 
-    * Aufgabe 41 Hinweise zu Sobel/Scharr:
-    * - Sobel und Scharr sind Gradientenoperatoren zur Kantenerkennung
-    * - Gradienten können negativ sein -> CV_16S (signed 16-bit) verwenden
-    * - Der Gradientenbetrag wird als sqrt(Gx² + Gy²) berechnet
-    * - Normalisierung mit cv::normalize() verbessert die Visualisierung
-    * - Scharr ist genauer als Sobel bei 3x3 Kernels
-    * 
-    * Aufgabe 42 Hinweise zu Laplacian:
-    * - Laplacian ist ein 2. Ableitungsoperator (kann negative Werte liefern)
-    * - Muss mit signed Format (CV_16S) verwendet werden
-    * - Vorglättung (z.B. Gaussian) reduziert Rauschempfindlichkeit
-    * 
-    * Aufgabe 45 Hinweise zu Gaussian Noise:
-    * - Für mittelwertfreies Rauschen (mean=0) muss ein signed Format 
-    *   verwendet werden, da CV_8U keine negativen Werte darstellen kann
-    * - Clipping (saturate_cast) beim Konvertieren zurück zu CV_8U
     */
 }
 
