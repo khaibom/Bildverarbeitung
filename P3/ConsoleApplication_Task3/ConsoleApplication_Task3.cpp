@@ -275,21 +275,19 @@ int main()
         // <<< Aufgabe 41
 
         // >>> Aufgabe 42: Canny und Laplacian mit Vorglättung
-        // Vorglättung mit Gaussian-Filter (wie im Tutorial empfohlen)
-        cv::Mat blurredForEdge;
-        cv::GaussianBlur(resultImage, blurredForEdge, cv::Size(5, 5), 1.4, 1.4);
-
+        // Gaussian-Filter
+        cv::Mat blurred;
+        cv::GaussianBlur(resultImage, blurred, cv::Size(5, 5), 1.4);
+		// Canny Edge Detector
         cv::Mat canny;
-        cv::Canny(blurredForEdge, canny, 50, 150);
-
-        // Laplacian mit 16-bit signed Format (negative Werte möglich)
-        cv::Mat laplacian16s, laplacian;
-        cv::Laplacian(blurredForEdge, laplacian16s, CV_16S, 3);
-        cv::convertScaleAbs(laplacian16s, laplacian);
-        cv::normalize(laplacian, laplacian, 0, 255, cv::NORM_MINMAX, CV_8U);
-
+        cv::Canny(blurred, canny, 100, 200);
+		// Laplacian mit Kanten Detektion
+        cv::Mat laplacian64, laplacianAbs;
+        cv::Laplacian(blurred, canny, CV_64F);
+        cv::convertScaleAbs(laplacian64, laplacianAbs);
+       
         // Partitionierte Visualisierung: Original vs Canny vs Laplacian
-        cv::Mat edgeCompare = getResultImage(resultImage, canny, laplacian, mask);
+        cv::Mat edgeCompare = getResultImage(resultImage, canny, laplacianAbs, mask);
         cv::imshow("Canny vs Laplacian Vergleich", edgeCompare);
         // <<< Aufgabe 42
 
