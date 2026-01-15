@@ -150,7 +150,6 @@ cv::Mat getMask(cv::Mat axisAlignedMask, int rotationAngleDeg){
 // >>> Aufgabe 45
 cv::Mat addGaussianNoise(const cv::Mat& src, double mean, double stddev)
 {
-    // Rauschen in 16-bit signed Format generieren, um negative Werte zu erhalten (mean=0)
     cv::Mat noise(src.size(), CV_16SC1);
     cv::randn(noise, mean, stddev);   // Gaussian noise (mittelwertfrei)
 
@@ -159,7 +158,6 @@ cv::Mat addGaussianNoise(const cv::Mat& src, double mean, double stddev)
     src.convertTo(src16s, CV_16SC1);
     cv::Mat noisy16s = src16s + noise;
 
-    // Zurück zu 8-bit mit Clipping (saturate_cast)
     cv::Mat noisy;
     noisy16s.convertTo(noisy, CV_8UC1);
     return noisy;
