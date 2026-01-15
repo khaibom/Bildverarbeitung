@@ -253,7 +253,9 @@ int main()
         cv::Sobel(resultImage, sobelX, CV_64F, 1, 0, 3);  
         cv::Sobel(resultImage, sobelY, CV_64F, 0, 1, 3);  
 		cv::magnitude(sobelX, sobelY, gradientSobel); 
+		cv::normalize(gradientSobel, gradientSobel, 0, 255, cv::NORM_MINMAX);
 		cv::Mat gradientSobelAbs;
+		gradientSobel.convertTo(gradientSobelAbs, CV_8U);
         cv::convertScaleAbs(gradientSobel, gradientSobelAbs);
       
 
@@ -262,7 +264,9 @@ int main()
         cv::Scharr(resultImage, scharrX, CV_64F, 1, 0);
         cv::Scharr(resultImage, scharrY, CV_64F, 0, 1);
         cv::magnitude(scharrX, scharrY, gradientScharr);
+		cv::normalize(gradientScharr, gradientScharr, 0, 255, cv::NORM_MINMAX);
         cv::Mat gradientScharrAbs;
+		gradientScharr.convertTo(gradientScharrAbs, CV_8U);
         cv::convertScaleAbs(gradientScharr, gradientScharrAbs);
 
         // Partitionierte Visualisierung: Original vs Sobel vs Scharr
