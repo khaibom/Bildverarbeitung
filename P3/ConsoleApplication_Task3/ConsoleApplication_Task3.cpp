@@ -248,30 +248,25 @@ int main()
         // <<< Aufgabe 40
 
         // >>> Aufgabe 41: Sobel und Scharr - Gradientenbetrag berechnen
-        // Sobel: Gradienten in X und Y Richtung mit 16-bit signed (negative Werte möglich)
-        cv::Mat sobelX, sobelY;
-        cv::Sobel(resultImage, sobelX, CV_16S, 1, 0, 3);  // Gradient in X-Richtung
-        cv::Sobel(resultImage, sobelY, CV_16S, 0, 1, 3);  // Gradient in Y-Richtung
-        // Gradientenbetrag: sqrt(Gx² + Gy²)
-        cv::Mat sobelAbsX, sobelAbsY, sobelMagnitude;
-        cv::convertScaleAbs(sobelX, sobelAbsX);
-        cv::convertScaleAbs(sobelY, sobelAbsY);
-        cv::addWeighted(sobelAbsX, 0.5, sobelAbsY, 0.5, 0, sobelMagnitude);
-        // Normalisierung für bessere Visualisierung
-        cv::normalize(sobelMagnitude, sobelMagnitude, 0, 255, cv::NORM_MINMAX, CV_8U);
+        // Sobel: Gradienten in X und Y Richtung (negative Werte möglich)
+        cv::Mat sobelX, sobelY, gradientSobel;
+        cv::Sobel(resultImage, sobelX, CV_64F, 1, 0, 3);  
+        cv::Sobel(resultImage, sobelY, CV_64F, 0, 1, 3);  
+		cv::magnitude(sobelX, sobelY, gradientSobel); 
+		cv::Mat gradientSobelAbs;
+        cv::convertScaleAbs(gradientSobel, gradientSobelAbs);
+      
 
         // Scharr: Genauerer 3x3 Gradientenoperator
-        cv::Mat scharrX, scharrY;
-        cv::Scharr(resultImage, scharrX, CV_16S, 1, 0);  // Gradient in X-Richtung
-        cv::Scharr(resultImage, scharrY, CV_16S, 0, 1);  // Gradient in Y-Richtung
-        cv::Mat scharrAbsX, scharrAbsY, scharrMagnitude;
-        cv::convertScaleAbs(scharrX, scharrAbsX);
-        cv::convertScaleAbs(scharrY, scharrAbsY);
-        cv::addWeighted(scharrAbsX, 0.5, scharrAbsY, 0.5, 0, scharrMagnitude);
-        cv::normalize(scharrMagnitude, scharrMagnitude, 0, 255, cv::NORM_MINMAX, CV_8U);
+        cv::Mat scharrX, scharrY, gradientScharr;
+        cv::Scharr(resultImage, scharrX, CV_64F, 1, 0);
+        cv::Scharr(resultImage, scharrY, CV_64F, 0, 1);
+        cv::magnitude(scharrX, scharrY, gradientScharr);
+        cv::Mat gradientScharrAbs;
+        cv::convertScaleAbs(gradientScharr, gradientScharrAbs);
 
         // Partitionierte Visualisierung: Original vs Sobel vs Scharr
-        cv::Mat gradientCompare = getResultImage(resultImage, sobelMagnitude, scharrMagnitude, mask);
+        cv::Mat gradientCompare = getResultImage(resultImage, gradientSobelAbs, gradientScharrAbs, mask);
         cv::imshow("Sobel vs Scharr Vergleich", gradientCompare);
         // <<< Aufgabe 41
 
