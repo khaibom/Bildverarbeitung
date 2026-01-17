@@ -3,7 +3,14 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
-// Function to find and draw contours
+// Calculate centroid of a contour using moments
+cv::Point calcCentroid(const std::vector<cv::Point>& contour) {
+    cv::Moments m = cv::moments(contour);
+    if (m.m00 == 0) return cv::Point(-1, -1);
+    return cv::Point(static_cast<int>(m.m10 / m.m00), static_cast<int>(m.m01 / m.m00));
+}
+
+// Function to find contours, calculate centroids, and visualize
 cv::Mat processImage(const cv::Mat& img) {
     cv::Mat result = img.clone();
     cv::Mat gray, binary;
@@ -23,49 +30,61 @@ cv::Mat processImage(const cv::Mat& img) {
     // Find the largest contour (outer ring)
     int outerIdx = 0;
     double maxArea = 0;
-    for (int i = 0; i < contours.size(); i++) {
+    for (size_t i = 0; i < contours.size(); i++) {
         double area = cv::contourArea(contours[i]);
         if (area > maxArea) {
             maxArea = area;
-            outerIdx = i;
+            outerIdx = static_cast<int>(i);
         }
     }
     
     // Draw outer ring contour in BLUE
     cv::drawContours(result, contours, outerIdx, cv::Scalar(255, 0, 0), 2);
     
+    // Calculate centroid of outer ring (Task 5a: position of object)
+    cv::Point outerCentroid = calcCentroid(contours[outerIdx]);
+    
     // Find the inner rectangular contour (small opening near "nose")
-    // Look for small contours with rectangular shape
     int innerIdx = -1;
-    double targetArea = maxArea * 0.01; // Inner opening is much smaller
+    double targetArea = maxArea * 0.01;
     double minDiff = maxArea;
     
-    for (int i = 0; i < contours.size(); i++) {
-        if (i == outerIdx) continue;
+    for (size_t i = 0; i < contours.size(); i++) {
+        if (static_cast<int>(i) == outerIdx) continue;
         
         double area = cv::contourArea(contours[i]);
         
         // Filter by size: should be small but not too tiny
         if (area > 100 && area < maxArea * 0.1) {
-            // Check if contour is somewhat rectangular using bounding rect ratio
             cv::RotatedRect rect = cv::minAreaRect(contours[i]);
             double rectArea = rect.size.width * rect.size.height;
-            double rectangularity = area / rectArea; // How rectangular (closer to 1 = more rectangular)
+            double rectangularity = area / rectArea;
             
-            // Prefer more rectangular shapes
             if (rectangularity > 0.5) {
                 double diff = std::abs(area - targetArea);
                 if (diff < minDiff || innerIdx == -1) {
                     minDiff = diff;
-                    innerIdx = i;
+                    innerIdx = static_cast<int>(i);
                 }
             }
         }
     }
     
-    // Draw inner rectangular contour in GREEN
+    // Draw inner rectangular contour in GREEN and calculate centroid
+    cv::Point innerCentroid(-1, -1);
     if (innerIdx >= 0) {
         cv::drawContours(result, contours, innerIdx, cv::Scalar(0, 255, 0), 2);
+        // Calculate centroid of inner contour (Task 5b: orientation reference)
+        innerCentroid = calcCentroid(contours[innerIdx]);
+    }
+    
+    // Task 6: Draw RED connection line between both centroids
+    if (outerCentroid.x >= 0 && innerCentroid.x >= 0) {
+        cv::line(result, outerCentroid, innerCentroid, cv::Scalar(0, 0, 255), 2);
+        
+        // Draw centroid markers for better visibility
+        cv::circle(result, outerCentroid, 5, cv::Scalar(255, 0, 0), -1);  // Blue filled circle
+        cv::circle(result, innerCentroid, 5, cv::Scalar(0, 255, 0), -1);  // Green filled circle
     }
     
     return result;
