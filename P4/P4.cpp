@@ -7,6 +7,8 @@
 
 int main()
 {
+    cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
+
     std::vector<std::string> imageNames = {
         "stellung0.bmp",
         "stellung0a.bmp",
@@ -18,24 +20,17 @@ int main()
         "stellung5.bmp",
         "stellung6.bmp"
     };
-    
     std::string basePath = "images/";
     
     std::vector<cv::Mat> images;
     for (const auto& name : imageNames) {
         cv::Mat img = cv::imread(basePath + name);
-        if (img.empty()) {
-            std::cerr << "Error: Could not load image " << name << std::endl;
-            return -1;
-        }
         images.push_back(img);
         std::cout << "Loaded: " << name << std::endl;
     }
-    
     std::cout << "\nLoaded " << images.size() << " images successfully." << std::endl;
     std::cout << "Press 'n' for next image, 'p' for previous image, 'q' or ESC to quit." << std::endl;
-    
-    // Display window
+   
     std::string windowName = "P4 - Ring Detection";
     cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
     
@@ -59,4 +54,5 @@ int main()
     
     cv::destroyAllWindows();
     return 0;
+}
 }
