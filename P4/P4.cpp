@@ -1,20 +1,62 @@
-// P4.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+
 
 #include <iostream>
+#include <vector>
+#include <string>
+#include <opencv2/opencv.hpp>
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    std::vector<std::string> imageNames = {
+        "stellung0.bmp",
+        "stellung0a.bmp",
+        "stellung1.bmp",
+        "stellung2.bmp",
+        "stellung2a.bmp",
+        "stellung3.bmp",
+        "stellung4.bmp",
+        "stellung5.bmp",
+        "stellung6.bmp"
+    };
+    
+    std::string basePath = "images/";
+    
+    std::vector<cv::Mat> images;
+    for (const auto& name : imageNames) {
+        cv::Mat img = cv::imread(basePath + name);
+        if (img.empty()) {
+            std::cerr << "Error: Could not load image " << name << std::endl;
+            return -1;
+        }
+        images.push_back(img);
+        std::cout << "Loaded: " << name << std::endl;
+    }
+    
+    std::cout << "\nLoaded " << images.size() << " images successfully." << std::endl;
+    std::cout << "Press 'n' for next image, 'p' for previous image, 'q' or ESC to quit." << std::endl;
+    
+    // Display window
+    std::string windowName = "P4 - Ring Detection";
+    cv::namedWindow(windowName, cv::WINDOW_AUTOSIZE);
+    
+    int currentIndex = 0;
+    
+    while (true) {
+        cv::setWindowTitle(windowName, windowName + " - " + imageNames[currentIndex]);
+        cv::imshow(windowName, images[currentIndex]);
+        int key = cv::waitKey(0);
+        
+        if (key == 'n' || key == 'N') {
+            currentIndex = (currentIndex + 1) % images.size();
+        }
+        else if (key == 'p' || key == 'P') {
+            currentIndex = (currentIndex - 1 + images.size()) % images.size();
+        }
+        else if (key == 'q' || key == 'Q' || key == 27) {
+            break;
+        }
+    }
+    
+    cv::destroyAllWindows();
+    return 0;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
