@@ -10,6 +10,16 @@ cv::Point calcCentroid(const std::vector<cv::Point>& contour) {
     return cv::Point(static_cast<int>(m.m10 / m.m00), static_cast<int>(m.m01 / m.m00));
 }
 
+// Check if contour touches image border
+bool touchesBorder(const std::vector<cv::Point>& contour, int width, int height) {
+    for (const auto& pt : contour) {
+        if (pt.x <= 1 || pt.x >= width - 2 || pt.y <= 1 || pt.y >= height - 2) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Function to find contours, calculate centroids, and visualize
 cv::Mat processImage(const cv::Mat& img) {
     cv::Mat result = img.clone();
@@ -27,16 +37,21 @@ cv::Mat processImage(const cv::Mat& img) {
     
     if (contours.empty()) return result;
     
-    // Find the largest contour (outer ring)
-    int outerIdx = 0;
+    // Find the largest contour that doesn't touch the border (outer ring)
+    int outerIdx = -1;
     double maxArea = 0;
     for (size_t i = 0; i < contours.size(); i++) {
+        // Skip contours that touch the image border
+        if (touchesBorder(contours[i], img.cols, img.rows)) continue;
+        
         double area = cv::contourArea(contours[i]);
         if (area > maxArea) {
             maxArea = area;
             outerIdx = static_cast<int>(i);
         }
     }
+    
+    if (outerIdx < 0) return result;
     
     // Draw outer ring contour in BLUE
     cv::drawContours(result, contours, outerIdx, cv::Scalar(255, 0, 0), 2);
