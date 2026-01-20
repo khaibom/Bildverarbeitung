@@ -3,14 +3,13 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
-// Calculate centroid of a contour using moments
 cv::Point calcCentroid(const std::vector<cv::Point>& contour) {
     cv::Moments m = cv::moments(contour);
     if (m.m00 == 0) return cv::Point(-1, -1);
     return cv::Point(static_cast<int>(m.m10 / m.m00), static_cast<int>(m.m01 / m.m00));
 }
 
-// Check if contour touches image border
+// Check if contour touches image border (the window inner border)
 bool touchesBorder(const std::vector<cv::Point>& contour, int width, int height) {
     for (const auto& pt : contour) {
         if (pt.x <= 1 || pt.x >= width - 2 || pt.y <= 1 || pt.y >= height - 2) {
@@ -25,9 +24,7 @@ cv::Mat processImage(const cv::Mat& img) {
     cv::Mat result = img.clone();
     cv::Mat gray, binary;
     
-    // Convert to grayscale
     cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
-    
     // Apply threshold to get binary image
     cv::threshold(gray, binary, 128, 255, cv::THRESH_BINARY);
     
@@ -37,7 +34,7 @@ cv::Mat processImage(const cv::Mat& img) {
     
     if (contours.empty()) return result;
     
-    // Find the largest contour that doesn't touch the border (outer ring)
+    // 3a: Find the largest contour that doesn't touch the border (outer ring)
     int outerIdx = -1;
     double maxArea = 0;
     for (size_t i = 0; i < contours.size(); i++) {
@@ -50,23 +47,17 @@ cv::Mat processImage(const cv::Mat& img) {
             outerIdx = static_cast<int>(i);
         }
     }
-    
     if (outerIdx < 0) return result;
-    
-    // Draw outer ring contour in BLUE
     cv::drawContours(result, contours, outerIdx, cv::Scalar(255, 0, 0), 2);
-    
-    // Calculate centroid of outer ring (Task 5a: position of object)
     cv::Point outerCentroid = calcCentroid(contours[outerIdx]);
     
-    // Find the inner rectangular contour (small opening near "nose")
+    // 3b: Find the inner rectangular contour (small opening near "nose")
     int innerIdx = -1;
     double targetArea = maxArea * 0.01;
     double minDiff = maxArea;
     
     for (size_t i = 0; i < contours.size(); i++) {
         if (static_cast<int>(i) == outerIdx) continue;
-        
         double area = cv::contourArea(contours[i]);
         
         // Filter by size: should be small but not too tiny
@@ -85,21 +76,17 @@ cv::Mat processImage(const cv::Mat& img) {
         }
     }
     
-    // Draw inner rectangular contour in GREEN and calculate centroid
     cv::Point innerCentroid(-1, -1);
     if (innerIdx >= 0) {
         cv::drawContours(result, contours, innerIdx, cv::Scalar(0, 255, 0), 2);
-        // Calculate centroid of inner contour (Task 5b: orientation reference)
         innerCentroid = calcCentroid(contours[innerIdx]);
     }
     
-    // Task 6: Draw RED connection line between both centroids
+    // Aufgabe 6
     if (outerCentroid.x >= 0 && innerCentroid.x >= 0) {
         cv::line(result, outerCentroid, innerCentroid, cv::Scalar(0, 0, 255), 2);
-        
-        // Draw centroid markers for better visibility
-        cv::circle(result, outerCentroid, 5, cv::Scalar(255, 0, 0), -1);  // Blue filled circle
-        cv::circle(result, innerCentroid, 5, cv::Scalar(0, 255, 0), -1);  // Green filled circle
+        cv::circle(result, outerCentroid, 5, cv::Scalar(255, 0, 0), -1);
+        cv::circle(result, innerCentroid, 5, cv::Scalar(0, 255, 0), -1);
     }
     
     return result;
@@ -138,13 +125,10 @@ int main()
     
     while (true) {
         cv::setWindowTitle(windowName, windowName + " - " + imageNames[currentIndex]);
-        
-        // Process image and show with contours
         cv::Mat processed = processImage(images[currentIndex]);
         cv::imshow(windowName, processed);
         
         int key = cv::waitKey(0);
-        
         if (key == 'n' || key == 'N') {
             currentIndex = (currentIndex + 1) % images.size();
         }
